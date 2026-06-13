@@ -1,9 +1,12 @@
 var express = require('express');
 var router = express.Router();
 
-/* GET home page. */
+/* GET home page - Đổi từ res.render sang res.json */
 router.get('/', function (req, res, next) {
-  res.render('index', { title: 'Express' });
+  res.json({
+    status: "success",
+    message: "Legal Tool API is running perfectly!"
+  });
 });
 
 module.exports = router;
