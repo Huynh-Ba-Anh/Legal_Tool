@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+@layer base {
+  input, button, select, textarea {
+    @apply rounded-none!;
+  }
+}
