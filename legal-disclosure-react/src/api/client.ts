@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const client = axios.create({
-    baseURL: import.meta.env.VITE_API_URL_RENDER,
+    baseURL: import.meta.env.VITE_API_BASE_URL || "https://legal-tool-uooy.onrender.com",
     headers: {
         "Content-Type": "application/json",
     },
