@@ -18,6 +18,9 @@ router.post("/login", async (req, res) => {
 
         const isMatch = await user.comparePassword(password);
 
+        console.log("PASSWORD MATCH:", isMatch);
+
+
         if (!isMatch) {
             return res.status(401).json({
                 message: "Sai tài khoản hoặc mật khẩu",
