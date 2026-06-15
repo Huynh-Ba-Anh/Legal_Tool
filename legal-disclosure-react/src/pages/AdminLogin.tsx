@@ -25,17 +25,9 @@ export default function AdminLogin() {
             setIsLoading(true);
             setError("");
 
-            const data = await adminService.login(
-                username,
-                password
-            );
-            console.log("LOGIN RESPONSE:", data);
-            localStorage.setItem("token", data.token);
-            localStorage.setItem(
-                "user",
-                JSON.stringify(data.user)
-            );
+            const data = await adminService.login(username, password);
 
+            console.log("LOGIN RESPONSE:", data);
 
             navigate("/dashboard");
         } catch (err: any) {
