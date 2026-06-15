@@ -15,7 +15,6 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/admin-login" element={<AdminLogin />} />
 
-
         {/* PRIVATE ROUTES */}
         <Route element={<ProtectedRoute />}>
           <Route path="/dashboard" element={<Dashboard />} />
