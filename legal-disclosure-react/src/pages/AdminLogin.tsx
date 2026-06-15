@@ -29,12 +29,13 @@ export default function AdminLogin() {
                 username,
                 password
             );
-
+            console.log("LOGIN RESPONSE:", data);
             localStorage.setItem("token", data.token);
             localStorage.setItem(
                 "user",
                 JSON.stringify(data.user)
             );
+
 
             navigate("/dashboard");
         } catch (err: any) {
