@@ -18,7 +18,7 @@ export const fileService = {
         formData: FormData
     ): Promise<IFile> => {
         const response = await client.patch(
-            `/filesInform/${id}`,
+            `filesInform/${id}`,
             formData,
             {
                 headers: {
@@ -30,9 +30,8 @@ export const fileService = {
         return response.data;
     },
 
-    // Xóa biểu mẫu
     delete: async (id: string): Promise<void> => {
-        await client.delete(`/filesInform/${id}`);
+        await client.delete(`filesInform/${id}`);
     },
 
     // Thêm mới biểu mẫu (Dự phòng cho nút "Thêm biểu mẫu")

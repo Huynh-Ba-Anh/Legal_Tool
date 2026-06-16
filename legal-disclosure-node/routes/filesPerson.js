@@ -11,10 +11,30 @@ router.post("/import", upload.single("file"), async (req, res) => {
         const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
         let allRows = [];
 
-        workbook.SheetNames.forEach(sheetName => {
+        const dataSheets = workbook.SheetNames.slice(2);
+
+        console.log("--- CÁC SHEET SẼ ĐƯỢC BACKEND ĐỌC ---", dataSheets);
+
+        if (dataSheets.length === 0) {
+            return res.status(400).json({ message: "File Excel không có đủ dữ liệu từ sheet thứ 3 trở đi." });
+        }
+
+        dataSheets.forEach(sheetName => {
             const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
             allRows = allRows.concat(rows);
         });
+
+
+        // Sử dụng xóa trực tiếp thông qua mongoose connection để tránh lỗi xung đột Model định nghĩa
+        if (Person.collection) {
+            await Person.collection.deleteMany({});
+            console.log("Đã xóa thành công và an toàn");
+        } else {
+            await Person.deleteMany({});
+            console.log(" Đã xóa thành công và an toàn _1");
+
+        }
+
 
         const operations = allRows.map((row) => {
             const soGiayNsh = String(row["Số giấy NSH"] || "").trim();

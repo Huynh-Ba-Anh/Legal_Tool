@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
-import { Search, User, BadgeInfo, AlertTriangle, FileCheck, FileText } from "lucide-react";
+import { Search, User, BadgeInfo, AlertTriangle, FileCheck, FileText, ArrowDown } from "lucide-react";
 import type { IPerson } from "../ts/IPerson";
 import { legalService } from "../services/legal";
 import type { IFile } from "../ts/IFile";
@@ -54,27 +54,32 @@ export default function HomePage() {
     return (
         <div className="min-h-screen bg-slate-100">
             <div
-                className="relative bg-cover bg-center text-white py-24"
+                className="relative isolate overflow-hidden bg-cover bg-center text-white py-28"
                 style={{
                     backgroundImage: "url('/image copy.png')",
                 }}
             >
-                <div className="absolute inset-0 bg-indigo-500/20 backdrop-blur-[2px]" />
-                {/* Content */}
-                <div className="relative max-w-5xl mx-auto text-center px-4">
-                    <img
-                        src="/image.png"
-                        alt="HHV"
-                        className="h-24 mx-auto mb-8 bg-white p-3 rounded-xl shadow-lg"
-                    />
+                {/* Overlay */}
+                <div className="absolute inset-0 bg-linear-to-b from-indigo-900/60 via-indigo-800/40 to-slate-900/60 backdrop-blur-sm" />
 
-                    <h1 className="text-5xl font-bold drop-shadow-lg">
-                        CỔNG THÔNG TIN CÔNG BỐ THÔNG TIN
+                {/* Content */}
+                <div className="relative max-w-5xl mx-auto text-center px-6">
+                    <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight leading-tight drop-shadow-lg">
+                        CÔNG TY CỔ PHẦN ĐẦU TƯ HẠ TẦNG GIAO THÔNG ĐÈO CẢ
                     </h1>
 
-                    <p className="mt-4 text-lg text-slate-200 max-w-3xl mx-auto">
-                        Tra cứu nghĩa vụ công bố thông tin của Người nội bộ và. Người có liên quan theo quy định hiện hành.
+                    <p className="mt-6 text-base md:text-lg text-slate-100/90 max-w-3xl mx-auto leading-relaxed">
+                        Phần mềm tra cứu nghĩa vụ công bố thông tin của Người nội bộ và Người có liên quan
                     </p>
+
+                    {/* Arrow */}
+                    <div className="mt-10 flex justify-center">
+                        <div className="animate-bounce cursor-pointer">
+                            <div className="w-14 h-14 rounded-full bg-white/10 border border-white/30 backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition">
+                                <ArrowDown size={26} className="text-cyan-300" />
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 

@@ -8,7 +8,7 @@ var router = express.Router();
 
 
 
-router.get("/", protectedRoute, async (req, res) => {
+router.get("/", async (req, res) => {
     try {
         const { typePerson } = req.query;
         const queryType = typePerson == "TC" ? "NLQ" : typePerson;
@@ -132,6 +132,29 @@ router.get("/:id/preview", async (req, res) => {
 
     } catch (error) {
         res.status(500).json({
+            message: error.message,
+        });
+    }
+});
+
+router.delete("/:id", async (req, res) => {
+    try {
+        const file = await File.findById(req.params.id);
+
+        if (!file) {
+            return res.status(404).json({
+                message: "Không tìm thấy file",
+            });
+        }
+
+        await File.deleteOne({ _id: req.params.id });
+
+        return res.status(200).json({
+            message: "Xóa file thành công",
+        });
+
+    } catch (error) {
+        return res.status(500).json({
             message: error.message,
         });
     }

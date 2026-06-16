@@ -6,7 +6,11 @@ import type { IFile, IFileDraft } from "../ts/IFile";
 import Update from "./ui/Update";
 import Create from "./ui/Create";
 
-export default function FilesManage() {
+type Props = {
+    onFilesChange: (files: IFile[]) => void;
+};
+
+export default function FilesManage({ onFilesChange }: Props) {
     const [files, setFiles] = useState<IFile[]>([]);
     const [search, setSearch] = useState("");
     const [filter, setFilter] = useState("ALL");
@@ -30,7 +34,10 @@ export default function FilesManage() {
     const loadFiles = async () => {
         try {
             const data = await fileService.getAll();
-            setFiles(Array.isArray(data) ? data : []);
+            const safeData = Array.isArray(data) ? data : [];
+
+            setFiles(safeData);
+            onFilesChange(safeData);
         } catch (err) {
             console.error("Lỗi tải danh sách biểu mẫu:", err);
         }
@@ -40,10 +47,18 @@ export default function FilesManage() {
         if (!confirm("Bạn có chắc chắn muốn xóa biểu mẫu này không?")) return;
 
         try {
-            setFiles(files.filter((item) => item._id !== id));
+            await fileService.delete(id);
+
+            const updated = files.filter(item => item._id !== id);
+
+            setFiles(updated);
+
             if (selectedFile?._id === id) {
                 setSelectedFile(null);
             }
+
+            onFilesChange(updated);
+
         } catch (err) {
             console.error("Lỗi xóa biểu mẫu:", err);
             alert("Có lỗi xảy ra khi xóa.");
@@ -106,7 +121,10 @@ export default function FilesManage() {
 
             const createdItem = await fileService.create(formData);
 
-            setFiles(prev => [...prev, createdItem]);
+            const updated = [...files, createdItem];
+
+            setFiles(updated);
+            onFilesChange(updated);
 
             setNewFile({
                 title: "",

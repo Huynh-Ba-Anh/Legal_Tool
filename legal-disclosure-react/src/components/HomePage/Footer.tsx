@@ -1,47 +1,62 @@
-import { Building2, ShieldCheck } from "lucide-react";
-
 export default function Footer() {
     return (
         <footer className="bg-[#2e2c7d] text-white mt-auto">
+            <div className="max-w-7xl mx-auto px-6 py-8">
 
-            <div className="max-w-7xl mx-auto px-6 py-6">
+                {/* Top */}
+                <div className="flex flex-col md:flex-row justify-between gap-8">
 
-                <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                    {/* LEFT */}
+                    <div className="flex gap-4 items-start">
 
-                    {/* Left */}
-                    <div className="flex items-center gap-3">
-                        <Building2 size={20} />
+                        <div className="w-32 h-12 rounded-md bg-white flex items-center justify-center overflow-hidden">
+                            <img
+                                src="/image.png"
+                                alt="HHV Logo"
+                                className="h-8 w-auto object-contain"
+                            />
+                        </div>
+
                         <div>
-                            <p className="font-semibold">
-                                CTCP Đầu tư Hạ tầng Giao thông Đèo Cả (HHV)
-                            </p>
-                            <p className="text-sm text-white/70">
+                            <h2 className="font-semibold text-base md:text-lg leading-snug">
+                                CÔNG TY CỔ PHẦN ĐẦU TƯ HẠ TẦNG GIAO THÔNG ĐÈO CẢ
+                            </h2>
+
+                            <p className="text-sm text-white/70 mt-1">
                                 Cổng tra cứu nghĩa vụ công bố thông tin
                             </p>
                         </div>
                     </div>
 
-                    {/* Right */}
-                    <div className="flex items-center gap-2 text-sm text-white/80">
-                        <ShieldCheck size={16} />
-                        <span>
-                            Chỉ dành cho nhân viên và đối tượng được ủy quyền
-                        </span>
-                    </div>
+                    {/* RIGHT */}
+                    <div className="text-sm text-white/80 space-y-2 md:text-left max-w-md">
 
+                        <p>
+                            <span className="font-medium text-white">Trụ sở:</span>{" "}
+                            Km11+500 tuyến đường dẫn phía Nam hầm Hải Vân,
+                            phường Hải Vân, TP. Đà Nẵng
+                        </p>
+
+                        <p>
+                            <span className="font-medium text-white">Liên hệ:</span>{" "}
+                            0903 673 684 - Mr. Huy (Trưởng ban Pháp chế)
+                        </p>
+
+                        <p>
+                            <span className="font-medium text-white">Email:</span>{" "}
+                            info@hhv.com.vn
+                        </p>
+                    </div>
                 </div>
 
                 {/* Divider */}
-                <div className="border-t border-white/20 my-4" />
+                <div className="border-t border-white/15 my-6" />
 
-                {/* Copyright */}
+                {/* Bottom */}
                 <div className="text-center text-xs text-white/60">
-                    © {new Date().getFullYear()} HHV - Ban Pháp chế.
-                    Mọi quyền được bảo lưu.
+                    © {new Date().getFullYear()} CTCP Đầu tư Hạ tầng Giao thông Đèo Cả (HHV). All rights reserved.
                 </div>
-
             </div>
-
         </footer>
     );
 }

@@ -2,12 +2,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as XLSX from "xlsx";
-import { Upload } from "lucide-react";
+import { Loader2, Upload } from "lucide-react";
 import { personService } from "../services/people";
 import React from "react";
 import { legalService } from "../services/legal";
 import FilesManage from "../components/FilesManage";
 import { useNavigate } from "react-router-dom";
+import type { IFile } from "../ts/IFile";
 
 const COLUMNS = [
     { label: "Mã CK", key: "Mã chứng khoán" },
@@ -30,7 +31,9 @@ const COLUMNS = [
 ];
 
 export default function Dashboard() {
+    const [filesAll, setFilesAll] = useState<IFile[]>([]);
     const [loading, setLoading] = useState(false);
+    const [isReadingFile, setIsReadingFile] = useState(false);
     const [message, setMessage] = useState("");
     const [excelData, setExcelData] = useState<any[]>([]);
     const [dbPeople, setDbPeople] = useState<any[]>([]);
@@ -40,7 +43,9 @@ export default function Dashboard() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const navigate = useNavigate();
 
-
+    const handleFilesChange = (newFiles: IFile[]) => {
+        setFilesAll(newFiles);
+    };
     useEffect(() => {
         const loadAllPeople = async () => {
             try {
@@ -58,7 +63,7 @@ export default function Dashboard() {
     const groupedData = useMemo(() => {
         if (!Array.isArray(dbPeople)) return [];
 
-        const nnbList = dbPeople.filter(p => p.moi_quan_he == "Người nội bộ");
+        const nnbList = dbPeople.filter(p => p.moi_quan_he == "Người nội bộ" || p.related_nsh == "");
         console.log(nnbList)
 
         return nnbList.map(nnb => ({
@@ -74,22 +79,32 @@ export default function Dashboard() {
         const file = e.target.files?.[0];
         if (!file) return;
         setSelectedFile(file);
+        setMessage("");
+        setExcelData([]);
+        setIsReadingFile(true);
 
         const reader = new FileReader();
         reader.onload = (event) => {
-            const data = event.target?.result;
-            const workbook = XLSX.read(data, { type: "binary" });
+            try {
+                const data = event.target?.result;
+                const workbook = XLSX.read(data, { type: "binary" });
 
-            let allData: any[] = [];
+                let allData: any[] = [];
+                const dataSheets = workbook.SheetNames.slice(2);
 
-            workbook.SheetNames.forEach((sheetName) => {
-                const worksheet = workbook.Sheets[sheetName];
-                const rows = XLSX.utils.sheet_to_json(worksheet);
-                allData = [...allData, ...rows];
-            });
+                dataSheets.forEach((sheetName) => {
+                    const worksheet = workbook.Sheets[sheetName];
+                    const rows = XLSX.utils.sheet_to_json(worksheet);
+                    allData = [...allData, ...rows];
+                });
 
-            setExcelData(allData);
-            setMessage(`Đã đọc ${allData.length} dòng từ ${workbook.SheetNames.length} sheet.`);
+                setExcelData(allData);
+                setMessage(`Đã đọc ${allData.length} dòng từ ${dataSheets.length} sheet dữ liệu (đã bỏ qua 2 sheet đầu).`);
+            } catch (err) {
+                setMessage("Có lỗi xảy ra trong quá trình đọc file cấu trúc Excel.");
+            } finally {
+                setIsReadingFile(false);
+            }
         };
         reader.readAsBinaryString(file);
     };
@@ -145,7 +160,7 @@ export default function Dashboard() {
             <div className="grid md:grid-cols-3 gap-6 mb-8">
                 <div className="bg-white rounded-2xl shadow p-6"><p className="text-slate-500">Người nội bộ</p><h3 className="text-3xl font-bold">{groupedData.length}</h3></div>
                 <div className="bg-white rounded-2xl shadow p-6"><p className="text-slate-500">Người liên quan</p><h3 className="text-3xl font-bold">{dbPeople.length - groupedData.length}</h3></div>
-                <div className="bg-white rounded-2xl shadow p-6"><p className="text-slate-500">Biểu mẫu</p><h3 className="text-3xl font-bold">0</h3></div>
+                <div className="bg-white rounded-2xl shadow p-6"><p className="text-slate-500">Biểu mẫu</p><h3 className="text-3xl font-bold">{filesAll.length}</h3></div>
             </div>
 
             <div className="bg-white rounded-2xl shadow overflow-hidden mb-8">
@@ -155,8 +170,8 @@ export default function Dashboard() {
                         <table className="min-w-full text-sm border-collapse">
                             <thead className="bg-slate-100 sticky top-0">
                                 <tr>
-                                    <th className="p-3 text-left">Họ tên / Mối quan hệ</th>
-                                    <th className="p-3 text-left">Chức vụ tại công ty</th>
+                                    <th className="p-3 text-left">Họ tên</th>
+                                    <th className="p-3 text-left">Mối quan hệ</th>
                                     <th className="p-3 text-left">Số giấy NSH</th>
                                 </tr>
                             </thead>
@@ -165,7 +180,7 @@ export default function Dashboard() {
                                     <React.Fragment key={nnb.so_giay_nsh}>
                                         <tr className="bg-blue-50 font-bold border-t">
                                             <td className="p-3 text-[#2e2c7d]">{nnb.ho_ten}</td>
-                                            <td className="p-3">{nnb.chuc_vu || "-"}</td>
+                                            <td className="p-3">{nnb.moi_quan_he || "-"}</td>
                                             <td className="p-3">{nnb.so_giay_nsh}</td>
                                         </tr>
                                         {nnb.related?.map((nlq: any) => (
@@ -195,9 +210,22 @@ export default function Dashboard() {
                 <div className="bg-[#2e2c7d] text-white px-6 py-4 font-semibold">Cập nhật dữ liệu từ Excel</div>
                 <div className="p-8">
                     <label htmlFor="excel-upload" className="flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-2xl py-12 cursor-pointer hover:border-[#2e2c7d] hover:bg-slate-50">
-                        <Upload size={50} className="text-[#2e2c7d]" />
-                        <h3 className="mt-4 font-semibold text-lg">Chọn file Excel</h3>
-                        <input ref={fileInputRef} id="excel-upload" type="file" accept=".xlsx,.xls" onChange={handleFileChange} className="hidden" />
+                        {isReadingFile ? (
+                            // Giao diện quay icon tròn khi đang bóc tách file
+                            <>
+                                <Loader2 size={50} className="text-[#2e2c7d] animate-spin" />
+                                <h3 className="mt-4 font-semibold text-lg text-slate-600">Hệ thống đang bóc tách dữ liệu Excel, vui lòng đợi...</h3>
+                            </>
+                        ) : (
+                            // Giao diện bình thường khi chưa chọn file
+                            <>
+                                <Upload size={50} className="text-[#2e2c7d]" />
+                                <h3 className="mt-4 font-semibold text-lg">Chọn file Excel</h3>
+                            </>
+                        )}
+                        <input ref={fileInputRef} id="excel-upload" type="file" accept=".xlsx,.xls" onChange={handleFileChange} onClick={(e) => {
+                            e.currentTarget.value = "";
+                        }} className="hidden" />
                     </label>
 
                     {message && <div className="mt-4 bg-blue-50 border border-blue-200 text-blue-700 p-4 rounded-xl">{message}</div>}
@@ -247,7 +275,9 @@ export default function Dashboard() {
                     </div>
                 </div>
             )}
-            <FilesManage />
+            <FilesManage
+                onFilesChange={handleFilesChange}
+            />
         </div>
     );
 }

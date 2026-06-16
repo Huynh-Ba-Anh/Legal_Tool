@@ -27,7 +27,7 @@ export default function Header() {
 
                     <div className="flex-1 px-6 overflow-hidden">
                         <div className="whitespace-nowrap animate-marquee text-sm font-medium text-center">
-                            KHÁT VỌNG VIỆT NAM • KẾT NỐI NHỮNG CUNG ĐƯỜNG • CHINH PHỤC NHỮNG ĐỈNH CAO • HỢP TÁC - PHÁT TRIỂN - BỀN VỮNG
+                            KHÁT VỌNG - KIÊN ĐỊNH - TRI ÂN
                         </div>
                     </div>
 
