@@ -1,18 +1,21 @@
-var express = require('express');
-const Person = require('../models/Person');
-const { protectedRoute } = require('../auth/protectedRoute');
+var express = require("express");
+const Person = require("../models/Person");
+const { protectedRoute } = require("../auth/protectedRoute");
 var router = express.Router();
 
 /* GET users listing. */
-router.get('/search', async (req, res) => {
+router.get("/search", async (req, res) => {
   try {
     const { cccd } = req.query;
-    if (!cccd) return res.status(400).json({ message: "Vui lòng nhập số giấy NSH" });
+    if (!cccd)
+      return res.status(400).json({ message: "Vui lòng nhập số giấy NSH" });
 
     const person = await Person.findOne({ so_giay_nsh: cccd.trim() }).lean();
 
     if (!person) {
-      return res.status(404).json({ message: "Không tìm thấy thông tin của đối tượng này" });
+      return res
+        .status(404)
+        .json({ message: "Không tìm thấy thông tin của đối tượng này" });
     }
 
     let typePerson = null;
@@ -24,31 +27,39 @@ router.get('/search', async (req, res) => {
     } else {
       typePerson = "NNB";
     }
+
     let relatedPeople = [];
 
-    if (person.related_nsh?.length > 0) {
+    // SỬA LỖI TẠI ĐÂY:
+    if (person.related_nsh && person.related_nsh.length > 0) {
+      // Chuyển mảng [{ number_nsh, mqh_nsh }] thành mảng các chuỗi ['035047000747', ...]
+      const relatedNumbers = person.related_nsh.map((item) => item.number_nsh);
+
       relatedPeople = await Person.find({
-        so_giay_nsh: { $in: person.related_nsh }
+        so_giay_nsh: { $in: relatedNumbers }, // Truyền mảng chuỗi hợp lệ vào đây
       })
-        .select("ho_ten")
+        .select("ho_ten so_giay_nsh") // Nên lấy thêm so_giay_nsh để phía Client dễ map thông tin đối chiếu nếu cần
         .lean();
     }
+
+    console.log(person);
 
     res.json({
       ...person,
       typePerson,
-      related_info: relatedPeople
+      related_info: relatedPeople,
     });
-
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Lỗi hệ thống" });
   }
 });
 
-router.get('/all', protectedRoute, async (req, res) => {
+router.get("/all", protectedRoute, async (req, res) => {
   try {
-    const allPeople = await Person.find({}).select('ho_ten chuc_vu moi_quan_he so_giay_nsh related_nsh');
+    const allPeople = await Person.find({}).select(
+      "ho_ten chuc_vu moi_quan_he so_giay_nsh related_nsh",
+    );
     res.json(allPeople);
   } catch (err) {
     res.status(500).json({ message: "Lỗi lấy danh sách" });

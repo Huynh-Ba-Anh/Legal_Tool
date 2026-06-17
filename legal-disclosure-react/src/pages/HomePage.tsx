@@ -1,6 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
-import { Search, User, BadgeInfo, AlertTriangle, FileCheck, FileText, ArrowDown } from "lucide-react";
+import {
+  Search,
+  User,
+  BadgeInfo,
+  AlertTriangle,
+  FileCheck,
+  FileText,
+  ArrowDown,
+} from "lucide-react";
 import type { IPerson } from "../ts/IPerson";
 import { legalService } from "../services/legal";
 import type { IFile } from "../ts/IFile";
@@ -9,264 +17,334 @@ import { fileService } from "../services/file";
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
 export default function HomePage() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [person, setPerson] = useState<IPerson | null>(null);
+  const [file, setFile] = useState<IFile[]>([]);
+  const [error, setError] = useState("");
 
-    const [searchQuery, setSearchQuery] = useState("");
-    const [loading, setLoading] = useState(false);
-    const [person, setPerson] = useState<IPerson | null>(null);
-    const [file, setFile] = useState<IFile[]>([]);
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmedQuery = searchQuery.trim();
 
-    const [error, setError] = useState("");
+    if (!trimmedQuery) {
+      setError("Vui lòng nhập CCCD/CMND để tra cứu");
+      return;
+    }
 
-    const handleSearch = async (e: React.FormEvent) => {
-        e.preventDefault();
-        const trimmedQuery = searchQuery.trim();
+    try {
+      setLoading(true);
+      setError("");
+      setPerson(null);
+      setFile([]);
 
-        if (!trimmedQuery) {
-            setError("Vui lòng nhập CCCD/CMND để tra cứu");
-            return;
-        }
+      const data = await legalService.searchPerson(trimmedQuery);
 
-        try {
-            setLoading(true);
-            setError("");
-            setPerson(null);
-            setFile([]);
+      if (!data || Object.keys(data).length === 0) {
+        setError("Không tìm thấy thông tin cho số giấy tờ này");
+        return;
+      }
 
-            const data = await legalService.searchPerson(trimmedQuery);
+      setPerson(data);
+      if (data.typePerson) {
+        const fileData = await fileService.getObligations(data.typePerson);
+        setFile(fileData);
+      }
+    } catch (err: any) {
+      setError(err?.response?.data?.message || "Đã có lỗi xảy ra khi tra cứu");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            if (!data || Object.keys(data).length === 0) {
-                setError("Không tìm thấy thông tin cho số giấy tờ này");
-                return;
-            }
+  const renderRelationship = () => {
+    if (!person) return null;
 
-            setPerson(data);
-            if (data.typePerson) {
-                const fileData = await fileService.getObligations(data.typePerson);
-                setFile(fileData);
-            }
-        } catch (err: any) {
-            setError(err?.response?.data?.message || "Đã có lỗi xảy ra khi tra cứu");
-        } finally {
-            setLoading(false);
-        }
-    };
+    const type = person.typePerson?.trim();
 
-    return (
-        <div className="min-h-screen bg-slate-100">
-            <div
-                className="relative isolate overflow-hidden bg-cover bg-center text-white py-28"
-                style={{
-                    backgroundImage: "url('/image copy.png')",
-                }}
-            >
-                {/* Overlay */}
-                <div className="absolute inset-0 bg-linear-to-b from-indigo-900/60 via-indigo-800/40 to-slate-900/60 backdrop-blur-sm" />
+    switch (type) {
+      case "TC":
+        return person.related_info && person.related_info.length > 0 ? (
+          <div className="space-y-1.5">
+            {person.related_info.map((i) => {
+              // Tìm bản ghi chứa mối quan hệ tương ứng dựa vào số giấy tờ
+              const relation = person.related_nsh?.find(
+                (r) => r.number_nsh === i.so_giay_nsh,
+              );
 
-                {/* Content */}
-                <div className="relative max-w-5xl mx-auto text-center px-6">
-                    <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight leading-tight drop-shadow-lg">
-                        CÔNG TY CỔ PHẦN ĐẦU TƯ HẠ TẦNG GIAO THÔNG ĐÈO CẢ
-                    </h1>
-
-                    <p className="mt-6 text-base md:text-lg text-slate-100/90 max-w-3xl mx-auto leading-relaxed">
-                        Phần mềm tra cứu nghĩa vụ công bố thông tin của Người nội bộ và Người có liên quan
-                    </p>
-
-                    {/* Arrow */}
-                    <div className="mt-10 flex justify-center">
-                        <div className="animate-bounce cursor-pointer">
-                            <div className="w-14 h-14 rounded-full bg-white/10 border border-white/30 backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition">
-                                <ArrowDown size={26} className="text-cyan-300" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Search Section */}
-            <div className="relative z-10 max-w-5xl mx-auto px-4 -mt-20 pb-20">
-                <div className="bg-white rounded-2xl shadow-xl p-6">
-                    <form onSubmit={handleSearch} className="flex gap-4">
-                        <div className="relative flex-1">
-                            <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                            <input
-                                type="text"
-                                placeholder="Nhập số CCCD / CMND..."
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#2e2c7d] outline-none"
-                            />
-                        </div>
-                        <button type="submit" disabled={loading} className="bg-[#2e2c7d] text-white px-8 rounded-xl font-bold hover:bg-[#1f1d56] transition">
-                            {loading ? "Đang tra cứu..." : "TRA CỨU"}
-                        </button>
-                    </form>
-
-                    {error && (
-                        <div className="mt-4 bg-red-50 text-red-600 p-4 rounded-xl flex items-center gap-2">
-                            <AlertTriangle size={20} /> {error}
-                        </div>
+              return (
+                <div key={i._id || i.ho_ten} className="flex items-start gap-1">
+                  <span>
+                    • Người nội bộ{" "}
+                    <strong className="text-slate-900">{i.ho_ten}</strong>
+                    {relation?.mqh_nsh && (
+                      <span className="text-slate-500 text-xs italic ml-1">
+                        {relation.mqh_nsh.replace(/Người nội bộ/i, "")}
+                      </span>
                     )}
+                  </span>
                 </div>
+              );
+            })}
+          </div>
+        ) : (
+          <span className="text-slate-500 italic">
+            Tổ chức chưa cập nhật danh sách người nội bộ liên quan.
+          </span>
+        );
 
-                {/* Result Section */}
-                {person && (
-                    <div className="mt-8 space-y-6 animate-in fade-in duration-500">
-                        <div className="bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden">
-                            <div className="bg-linear-to-r from-[#2e2c7d] to-indigo-600 px-6 py-5 text-white">
-                                <div className="flex justify-between items-center">
-                                    <h2 className="text-xl font-bold">
-                                        KẾT QUẢ TRA CỨU
-                                    </h2>
+      case "NNB":
+        return (
+          <div>
+            Chức vụ hiện tại:{" "}
+            <strong className="text-indigo-900">
+              {person.chuc_vu || "Chưa rõ"}
+            </strong>
+          </div>
+        );
 
-                                    <span className="px-3 py-1 bg-white/20 rounded-full text-sm">
-                                        {person.typePerson == "TC" ? "Tổ chức" : person.typePerson}
-                                    </span>
-                                </div>
-                            </div>
+      case "NLQ":
+        return person.related_info && person.related_info.length > 0 ? (
+          <div className="space-y-1">
+            {person.related_info.map((nnb) => {
+              const relation = person.related_nsh?.find(
+                (r: any) => r.number_nsh === nnb.so_giay_nsh,
+              );
 
-                            <div className="p-6">
-                                <div className="grid lg:grid-cols-3 gap-6">
+              return (
+                <div
+                  key={nnb._id || nnb.so_giay_nsh}
+                  className="text-slate-700"
+                >
+                  Là{" "}
+                  <strong className="text-amber-700">
+                    {relation?.mqh_nsh || "Người liên quan"}
+                  </strong>{" "}
+                  của NNB:{" "}
+                  <strong className="text-slate-900">{nnb.ho_ten}</strong>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <span className="text-slate-400 italic">
+            Chưa cập nhật thông tin NNB liên quan
+          </span>
+        );
 
-                                    <div className="lg:col-span-2 space-y-4">
+      default:
+        // Xử lý an toàn cho trường hợp mặc định nếu related_nsh là mảng
+        return (
+          <span className="text-slate-500">
+            {Array.isArray(person.related_nsh)
+              ? person.related_nsh.map((r: any) => r.mqh_nsh).join(", ")
+              : "Không xác định"}
+          </span>
+        );
+    }
+  };
 
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center">
-                                                <User className="text-[#2e2c7d]" />
-                                            </div>
+  return (
+    <div className="min-h-screen bg-slate-100">
+      <div
+        className="relative isolate overflow-hidden bg-cover bg-center text-white py-28"
+        style={{
+          backgroundImage: "url('/image copy.png')",
+        }}
+      >
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-linear-to-b from-indigo-900/60 via-indigo-800/40 to-slate-900/60 backdrop-blur-sm" />
 
-                                            <div>
-                                                <h3 className="font-bold text-lg">
-                                                    {person.ho_ten}
-                                                </h3>
+        {/* Content */}
+        <div className="relative max-w-5xl mx-auto text-center px-6">
+          {/* Tiêu đề đã được ngắt dòng bằng <br /> */}
+          <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight leading-tight drop-shadow-lg">
+            CÔNG TY CỔ PHẦN <br />
+            ĐẦU TƯ HẠ TẦNG GIAO THÔNG ĐÈO CẢ
+          </h1>
 
-                                                <p className="text-slate-500 text-sm">
-                                                    {person.so_giay_nsh}
-                                                </p>
-                                            </div>
-                                        </div>
+          {/* Đoạn mô tả đã bổ sung cụm "của Người nội bộ" */}
+          <p className="mt-6 text-base md:text-lg text-slate-100/90 max-w-3xl mx-auto leading-relaxed">
+            Phần mềm tra cứu nghĩa vụ công bố thông tin của{" "}
+            <br className="hidden md:inline" />
+            Người nội bộ và Người có liên quan của Người nội bộ
+          </p>
 
-                                        <div className="grid md:grid-cols-2 gap-4">
-
-                                            <div className="bg-slate-50 rounded-xl p-4">
-                                                <p className="text-xs text-slate-500 uppercase">
-                                                    Mã chứng khoán
-                                                </p>
-
-                                                <p className="font-semibold">
-                                                    {person.ma_chung_khoan || "-"}
-                                                </p>
-                                            </div>
-
-                                            <div className="bg-slate-50 rounded-xl p-4">
-                                                <p className="text-xs text-slate-500 uppercase">
-                                                    Tài khoản giao dịch
-                                                </p>
-
-                                                <p className="font-semibold">
-                                                    {person.tk_giao_dich || "-"}
-                                                </p>
-                                            </div>
-
-                                        </div>
-
-                                        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
-                                            <h4 className="font-semibold text-amber-800 mb-3">
-                                                Mối quan hệ
-                                            </h4>
-
-
-                                            <div className="mt-2">
-                                                {person.typePerson?.trim() === "TC" ? (
-                                                    person.related_info?.map((i) => (
-                                                        <div key={i._id || i.ho_ten} className="text-slate-700">
-                                                            Người nội bộ <strong>{i.ho_ten}</strong>{" "}
-                                                            {person.moi_quan_he?.replace(/Người nội bộ/i, "")}
-                                                        </div>
-                                                    ))
-                                                ) : person.typePerson?.trim() === "NNB" ? (
-                                                    <span className="text-slate-500 ml-1">
-                                                        {person.moi_quan_he}
-                                                    </span>
-                                                ) : person.typePerson?.trim() === "NLQ" ? (
-                                                    <span className="text-slate-500 ml-1">
-                                                        ({person.moi_quan_he} của người nội bộ <strong>{person.related_info?.[0]?.ho_ten || "N/A"}</strong>)
-                                                    </span>
-                                                ) : null}
-                                            </div>
-                                        </div>
-
-                                    </div>
-
-                                    <div>
-                                        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 h-full">
-                                            <div className="flex items-center gap-2 mb-3">
-                                                <BadgeInfo
-                                                    size={18}
-                                                    className="text-blue-600"
-                                                />
-
-                                                <h4 className="font-semibold text-blue-700">
-                                                    Ghi chú
-                                                </h4>
-                                            </div>
-
-                                            <p className="text-sm leading-6 text-slate-700">
-                                                {person.ghi_chu ||
-                                                    "Hệ thống xác định đối tượng thuộc diện công bố thông tin theo quy định hiện hành."}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="bg-white rounded-3xl shadow-lg border border-slate-200 p-6">
-                            <h3 className="font-bold text-lg mb-6 flex items-center gap-2">
-                                <FileCheck className="text-green-600" />
-                                Nghĩa vụ và biểu mẫu
-                            </h3>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                                {file.map((item) => (
-                                    <div
-                                        key={item._id}
-                                        className="group bg-white rounded-3xl border border-slate-200 p-6 shadow-sm hover:shadow-xl hover:border-[#2e2c7d] transition-all duration-300 hover:-translate-y-1 flex flex-col"
-                                    >
-                                        <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center mb-4">
-                                            <FileText
-                                                size={24}
-                                                className="text-[#2e2c7d]"
-                                            />
-                                        </div>
-
-                                        <h4 className="font-semibold text-slate-800 text-lg mb-2 line-clamp-2">
-                                            {item.title}
-                                        </h4>
-
-                                        <p className="text-sm text-slate-500 flex-1 line-clamp-4">
-                                            {item.content}
-                                        </p>
-
-                                        {item.file && (
-                                            <a
-                                                href={`${API_URL}/filesInform/${item._id}/preview`}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="mt-5 inline-flex items-center justify-center rounded-xl bg-[#2e2c7d] px-4 py-2 text-sm font-medium text-white hover:bg-[#252365] transition"
-                                            >
-                                                Xem biểu mẫu
-                                            </a>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                )}
+          {/* Arrow */}
+          <div className="mt-10 flex justify-center">
+            <div className="animate-bounce cursor-pointer">
+              <div className="w-14 h-14 rounded-full bg-white/10 border border-white/30 backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition">
+                <ArrowDown size={26} className="text-cyan-300" />
+              </div>
             </div>
+          </div>
         </div>
-    );
-}
+      </div>
 
+      {/* Search Section */}
+      <div className="relative z-10 max-w-5xl mx-auto px-4 -mt-20 pb-20">
+        <div className="bg-white rounded-2xl shadow-xl p-6">
+          <form onSubmit={handleSearch} className="flex gap-4">
+            <div className="relative flex-1">
+              <Search
+                size={20}
+                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
+              />
+              <input
+                type="text"
+                placeholder="Nhập số CCCD / CMND..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#2e2c7d] outline-none"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="bg-[#2e2c7d] text-white px-8 rounded-xl font-bold hover:bg-[#1f1d56] transition"
+            >
+              {loading ? "Đang tra cứu..." : "TRA CỨU"}
+            </button>
+          </form>
+
+          {error && (
+            <div className="mt-4 bg-red-50 text-red-600 p-4 rounded-xl flex items-center gap-2">
+              <AlertTriangle size={20} /> {error}
+            </div>
+          )}
+        </div>
+
+        {/* Result Section */}
+        {person && (
+          <div className="mt-8 space-y-6 animate-in fade-in duration-500">
+            <div className="bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden">
+              <div className="bg-linear-to-r from-[#2e2c7d] to-indigo-600 px-6 py-5 text-white">
+                <div className="flex justify-between items-center">
+                  <h2 className="text-xl font-bold">KẾT QUẢ TRA CỨU</h2>
+
+                  <span className="px-3 py-1 bg-white/20 rounded-full text-sm">
+                    {person.typePerson === "TC"
+                      ? "Tổ chức"
+                      : person.typePerson === "NNB"
+                        ? "Người nội bộ"
+                        : "Người liên quan"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="p-6">
+                <div className="grid lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-2 space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center">
+                        <User className="text-[#2e2c7d]" />
+                      </div>
+
+                      <div>
+                        <h3 className="font-bold text-lg">{person.ho_ten}</h3>
+                        <p className="text-slate-500 text-sm">
+                          {person.so_giay_nsh}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="bg-slate-50 rounded-xl p-4">
+                        <p className="text-xs text-slate-500 uppercase">
+                          Mã chứng khoán
+                        </p>
+                        <p className="font-semibold">
+                          {person.ma_chung_khoan || "-"}
+                        </p>
+                      </div>
+
+                      <div className="bg-slate-50 rounded-xl p-4">
+                        <p className="text-xs text-slate-500 uppercase">
+                          Tài khoản giao dịch
+                        </p>
+                        <p className="font-semibold">
+                          {person.tk_giao_dich || "-"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Khối xử lý mối quan hệ tối ưu hóa */}
+                    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+                      <h4 className="font-semibold text-amber-800 mb-2">
+                        Mối quan hệ công bố thông tin
+                      </h4>
+                      <div className="text-sm leading-relaxed text-slate-700">
+                        {renderRelationship()}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 h-full">
+                      <div className="flex items-center gap-2 mb-3">
+                        <BadgeInfo size={18} className="text-blue-600" />
+                        <h4 className="font-semibold text-blue-700">Ghi chú</h4>
+                      </div>
+
+                      <p className="text-sm leading-6 text-slate-700">
+                        {person.ghi_chu ||
+                          "Hệ thống xác định đối tượng thuộc diện công bố thông tin theo quy định hiện hành."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Khối Nghĩa vụ và Biểu mẫu áp dụng */}
+            <div className="bg-white rounded-3xl shadow-lg border border-slate-200 p-6">
+              <h3 className="font-bold text-lg mb-6 flex items-center gap-2">
+                <FileCheck className="text-green-600" />
+                Nghĩa vụ và biểu mẫu áp dụng
+              </h3>
+
+              {file && file.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {file.map((item) => (
+                    <div
+                      key={item._id}
+                      className="group bg-white rounded-3xl border border-slate-200 p-6 shadow-sm hover:shadow-xl hover:border-[#2e2c7d] transition-all duration-300 hover:-translate-y-1 flex flex-col"
+                    >
+                      <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center mb-4">
+                        <FileText size={24} className="text-[#2e2c7d]" />
+                      </div>
+
+                      <h4 className="font-semibold text-slate-800 text-lg mb-2 line-clamp-2">
+                        {item.title}
+                      </h4>
+
+                      <p className="text-sm text-slate-500 flex-1 line-clamp-4">
+                        {item.content}
+                      </p>
+
+                      {item.file && (
+                        <a
+                          href={`${API_URL}/filesInform/${item._id}/preview`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="mt-5 inline-flex items-center justify-center rounded-xl bg-[#2e2c7d] px-4 py-2 text-sm font-medium text-white hover:bg-[#252365] transition"
+                        >
+                          Xem biểu mẫu
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-slate-500 text-sm italic">
+                  Không tìm thấy biểu mẫu nghĩa vụ tương thích với đối tượng
+                  này.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
