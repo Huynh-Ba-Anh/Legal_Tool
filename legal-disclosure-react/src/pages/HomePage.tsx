@@ -166,14 +166,14 @@ export default function HomePage() {
               Hệ thống tra cứu trực tuyến
             </span>
 
-            <h1 className="mt-8 text-4xl md:text-6xl font-black leading-tight text-white tracking-tight">
-              ĐẦU TƯ HẠ TẦNG
+            <h1 className="mt-8 text-3xl md:text-5xl font-black leading-tight text-white tracking-tight">
+              CÔNG TY CỔ PHẦN
               <br />
-              GIAO THÔNG ĐÈO CẢ
+              ĐẦU TƯ HẠ TẦNG GIAO THÔNG ĐÈO CẢ
             </h1>
 
-            <p className="mt-6 text-lg text-slate-200 max-w-3xl mx-auto leading-relaxed opacity-90">
-              Phần mềm tra cứu nghĩa vụ công bố thông tin của Người nội bộ và Người có liên quan
+            <p className="mt-6 text-[16px] text-slate-200 max-w-3xl mx-auto leading-relaxed opacity-90">
+              Phần mềm tra cứu nghĩa vụ công bố thông tin của Người nội bộ và Người có liên quan của người nội bộ
             </p>
           </div>
         </div>
@@ -188,7 +188,7 @@ export default function HomePage() {
                 <Search size={22} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="Nhập CCCD / CMND để tra cứu..."
+                  placeholder="Nhập Mã định danh cá nhân / Mã số thuế để tra cứu..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full h-16 pl-14 pr-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-[#2e2c7d] focus:bg-white transition-all outline-none text-slate-800 font-medium"
@@ -374,13 +374,12 @@ export default function HomePage() {
               </h2>
 
               <p className="mt-4 text-slate-500 leading-relaxed">
-                Nhập CCCD/CMND hoặc mã số định danh để hệ thống tra cứu
-                thông tin nghĩa vụ công bố thông tin và các biểu mẫu liên quan.
+                Nhập mã định danh cá nhân, hoạt mã số thuế để tra cứu nghĩa vụ công bố thông tin và các biểu mẫu liên quan.
               </p>
 
               <div className="mt-8 flex items-start gap-3 bg-indigo-50/50 border border-indigo-100 rounded-2xl p-4 text-left text-xs text-slate-600 max-w-md mx-auto">
                 <BadgeInfo size={18} className="text-[#2e2c7d] shrink-0 mt-0.5" />
-                <span>Cơ sở dữ liệu biểu mẫu động phân tách tự động theo nhóm đối tượng Tổ chức (TC), Người nội bộ (NNB), hoặc Người có liên quan (NLQ).</span>
+                <span>Cơ sở dữ liệu dựa trên thông tin danh sách Người nội bộ và Người có liên quan của người nội bộ.</span>
               </div>
             </div>
           </div>

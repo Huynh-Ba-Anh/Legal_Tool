@@ -26,7 +26,7 @@ export default function Header() {
                     <div className="w-px h-7 bg-white/40" />
 
                     <div className="flex-1 px-6 overflow-hidden">
-                        <div className="whitespace-nowrap animate-marquee text-sm font-medium text-center">
+                        <div className="whitespace-nowrap animate-marquee text-lg font-medium text-center">
                             KHÁT VỌNG - KIÊN ĐỊNH - TRI ÂN
                         </div>
                     </div>
