@@ -9,6 +9,7 @@ import { legalService } from "../services/legal";
 import FilesManage from "../components/FilesManage";
 import { useNavigate } from "react-router-dom";
 import type { IFile } from "../ts/IFile";
+import SupportManagement from "../components/SupportManagement";
 
 const COLUMNS = [
   { label: "Mã CK", key: "Mã chứng khoán" },
@@ -163,6 +164,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-slate-100 p-8">
+
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-[#2e2c7d]">
@@ -427,6 +429,19 @@ export default function Dashboard() {
 
       <FilesManage onFilesChange={handleFilesChange} />
 
+      <div className="p-6 bg-slate-50 rounded-2xl mt-5">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-slate-800">
+            Quản lý yêu cầu hỗ trợ
+          </h1>
+
+          <p className="text-sm text-slate-500 mt-1">
+            Theo dõi và xử lý các yêu cầu hỗ trợ từ người dùng.
+          </p>
+        </div>
+
+        <SupportManagement />
+      </div>
     </div>
   );
 }

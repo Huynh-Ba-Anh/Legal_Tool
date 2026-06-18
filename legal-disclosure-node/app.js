@@ -13,6 +13,7 @@ var personsRouter = require('./routes/persons');
 var usersRouter = require('./routes/users');
 var filesPersonRouter = require('./routes/filesPerson');
 var filesInformRouter = require('./routes/filesInform');
+var supportRouter = require('./routes/support');
 
 
 
@@ -38,7 +39,10 @@ app.use('/', indexRouter);
 app.use('/persons', personsRouter);
 app.use('/users', usersRouter);
 app.use('/filesPerson', filesPersonRouter);
-app.use('/filesInform', filesInformRouter)
+app.use('/filesInform', filesInformRouter);
+app.use('/support', supportRouter)
+
+
 
 
 

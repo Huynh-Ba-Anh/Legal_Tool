@@ -13,6 +13,7 @@ import type { IPerson } from "../ts/IPerson";
 import { legalService } from "../services/legal";
 import type { IFile } from "../ts/IFile";
 import { fileService } from "../services/file";
+import supportService from "../services/support";
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -22,11 +23,11 @@ export default function HomePage() {
   const [person, setPerson] = useState<IPerson | null>(null);
   const [file, setFile] = useState<IFile[]>([]);
   const [error, setError] = useState("");
-
   const [selectedFile, setSelectedFile] = useState<IFile | null>(null);
 
   const [feedback, setFeedback] = useState("");
   const [phone, setPhone] = useState("");
+  const [sendingSupport, setSendingSupport] = useState(false);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,11 +67,40 @@ export default function HomePage() {
     }
   };
 
-  const handleSendFeedback = (e: React.FormEvent) => {
+  const handleSubmitSupport = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert(`Đã nhận ý kiến đóng góp từ SĐT ${phone}`);
-    setFeedback("");
-    setPhone("");
+
+    if (!phone.trim()) {
+      alert("Vui lòng nhập số điện thoại!");
+      return;
+    }
+
+    try {
+      setSendingSupport(true);
+
+      await supportService.create({
+        phone: phone.trim(),
+        message: feedback.trim(),
+        cccd: person?.so_giay_nsh || searchQuery.trim(),
+        personName: person?.ho_ten || "",
+        typePerson: person?.typePerson as "NNB" | "NLQ" | undefined,
+        currentObligation: selectedFile?.title || "",
+      });
+
+      alert("Hệ thống đã ghi nhận yêu cầu hỗ trợ của bạn. Chúng tôi sẽ liên hệ lại sớm nhất có thể.");
+
+      setPhone("");
+      setFeedback("");
+    } catch (error: any) {
+      console.error("Lỗi gửi hỗ trợ:", error);
+
+      alert(
+        error?.response?.data?.message ||
+        "Gửi yêu cầu hỗ trợ thất bại. Vui lòng thử lại sau!"
+      );
+    } finally {
+      setSendingSupport(false);
+    }
   };
 
   const renderRelationship = () => {
@@ -151,63 +181,24 @@ export default function HomePage() {
         <div className="relative z-20 max-w-5xl mx-auto px-4 -mt-14">
           <form
             onSubmit={handleSearch}
-            className="
-              bg-white
-              rounded-3xl
-              shadow-[0_20px_60px_rgba(46,44,125,0.15)]
-              border border-slate-100
-              p-5
-            "
+            className="bg-white rounded-3xl shadow-[0_20px_60px_rgba(46,44,125,0.15)] border border-slate-100 p-5"
           >
             <div className="flex flex-col md:flex-row gap-4">
               <div className="relative flex-1">
-                <Search
-                  size={22}
-                  className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"
-                />
-
+                <Search size={22} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
                   placeholder="Nhập CCCD / CMND để tra cứu..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="
-                    w-full
-                    h-16
-                    pl-14
-                    pr-4
-                    rounded-2xl
-                    bg-slate-50
-                    border-2 border-transparent
-                    focus:border-[#2e2c7d]
-                    focus:bg-white
-                    transition-all
-                    outline-none
-                    text-slate-800
-                    font-medium
-                  "
+                  className="w-full h-16 pl-14 pr-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-[#2e2c7d] focus:bg-white transition-all outline-none text-slate-800 font-medium"
                 />
               </div>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="
-                  h-16
-                  px-10
-                  rounded-2xl
-                  bg-linear-to-r
-                  from-[#2e2c7d]
-                  to-[#4338ca]
-                  text-white
-                  font-bold
-                  tracking-wide
-                  hover:scale-105
-                  hover:shadow-xl
-                  transition-all
-                  duration-300
-                  shrink-0
-                "
+                className="h-16 px-10 rounded-2xl bg-linear-to-r from-[#2e2c7d] to-[#4338ca] text-white font-bold tracking-wide hover:scale-105 hover:shadow-xl transition-all duration-300 shrink-0"
               >
                 {loading ? "Đang tìm..." : "TRA CỨU"}
               </button>
@@ -268,7 +259,7 @@ export default function HomePage() {
                 </div>
               </div>
 
-              <form onSubmit={handleSendFeedback} className="border-t border-slate-100 bg-slate-50/70 p-5 space-y-3 rounded-b-3xl">
+              <form onSubmit={handleSubmitSupport} className="border-t border-slate-100 bg-slate-50/70 p-5 space-y-3 rounded-b-3xl">
                 <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Ý kiến / Lời nhắn để lại</h3>
                 <textarea
                   rows={2}
@@ -289,9 +280,10 @@ export default function HomePage() {
                   />
                   <button
                     type="submit"
-                    className="bg-linear-to-r from-[#2e2c7d] to-[#4338ca] text-white px-5 py-2 rounded-xl text-xs font-bold hover:opacity-95 transition-all duration-300 shadow-sm flex items-center gap-1.5 shrink-0"
+                    disabled={sendingSupport}
+                    className="bg-linear-to-r from-[#2e2c7d] to-[#4338ca] text-white px-5 py-2 rounded-xl text-xs font-bold hover:opacity-95 transition-all duration-300 shadow-sm flex items-center gap-1.5 shrink-0 disabled:bg-slate-400"
                   >
-                    <Send size={12} /> GỬI
+                    <Send size={12} /> {sendingSupport ? "..." : "GỬI"}
                   </button>
                 </div>
               </form>
@@ -307,27 +299,10 @@ export default function HomePage() {
                     <button
                       key={item._id}
                       onClick={() => setSelectedFile(item)}
-                      className={`
-                        w-full
-                        text-left
-                        p-4
-                        rounded-2xl
-                        transition-all
-                        duration-300
-                        border
-                        hover:-translate-y-1
-                        hover:shadow-lg
-                        text-xs
-                        font-semibold
-                        block
-                        relative
-                        pr-8
-                        
-                        ${selectedFile?._id === item._id
-                          ? "border-[#2e2c7d] bg-linear-to-r from-indigo-50 to-cyan-50 text-[#2e2c7d]"
-                          : "border-slate-200 bg-white text-slate-700"
-                        }
-                      `}
+                      className={`w-full text-left p-4 rounded-2xl transition-all duration-300 border hover:-translate-y-1 hover:shadow-lg text-xs font-semibold block relative pr-8 ${selectedFile?._id === item._id
+                        ? "border-[#2e2c7d] bg-linear-to-r from-indigo-50 to-cyan-50 text-[#2e2c7d]"
+                        : "border-slate-200 bg-white text-slate-700"
+                        }`}
                     >
                       <div className="line-clamp-2 leading-relaxed">{item.title}</div>
                       <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-60 text-sm">→</div>
@@ -353,20 +328,7 @@ export default function HomePage() {
                       <h3 className="font-bold text-slate-900 text-sm leading-snug">
                         {selectedFile.title}
                       </h3>
-                      <div className="
-                        bg-slate-50
-                        border
-                        border-slate-200
-                        rounded-2xl
-                        p-4
-                        leading-relaxed
-                        shadow-inner
-                        text-xs
-                        text-slate-600
-                        max-h-64
-                        overflow-y-auto
-                        whitespace-pre-line
-                      ">
+                      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 leading-relaxed shadow-inner text-xs text-slate-600 max-h-64 overflow-y-auto whitespace-pre-line">
                         {selectedFile.content}
                       </div>
                     </div>
@@ -403,17 +365,7 @@ export default function HomePage() {
         ) : (
           <div className="flex-1 flex items-center justify-center py-24 animate-in fade-in duration-500">
             <div className="max-w-xl text-center">
-              <div className="
-                w-24 h-24
-                rounded-full
-                bg-linear-to-br
-                from-indigo-500
-                to-cyan-500
-                text-white
-                flex items-center justify-center
-                mx-auto
-                shadow-xl
-              ">
+              <div className="w-24 h-24 rounded-full bg-linear-to-br from-indigo-500 to-cyan-500 text-white flex items-center justify-center mx-auto shadow-xl">
                 <User size={42} />
               </div>
 
