@@ -71,11 +71,9 @@ export default function Dashboard() {
     loadAllPeople();
   }, []);
 
-  // Đã sửa đổi logic mapping khớp nối theo cấu trúc mảng Object của DB mới
   const groupedData = useMemo(() => {
     if (!Array.isArray(dbPeople)) return [];
 
-    // Lọc ra các Người nội bộ (NNB) hoặc Tổ chức (TC) đóng vai trò gốc
     const nnbList = dbPeople.filter(
       (p) =>
         p.typePerson === "NNB" ||
@@ -87,7 +85,6 @@ export default function Dashboard() {
     return nnbList.map((nnb) => {
       const nnbTargetNum = nnb.so_giay_nsh?.trim();
 
-      // Tìm tất cả người liên quan (NLQ) trỏ về số giấy tờ của NNB này
       const related = dbPeople.filter((p) => {
         if (!Array.isArray(p.related_nsh)) return false;
         return p.related_nsh.some(
@@ -184,7 +181,6 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white rounded-2xl shadow p-6">
           <p className="text-slate-500 font-medium">
@@ -210,7 +206,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Main Grid View */}
       <div className="bg-white rounded-2xl shadow overflow-hidden mb-8 border border-slate-200">
         <div className="bg-[#2e2c7d] text-white px-6 py-4 font-bold tracking-wide">
           DANH SÁCH ĐỐI TƯỢNG PHÂN CẤP QUẢN LÝ
@@ -245,7 +240,6 @@ export default function Dashboard() {
                 ) : (
                   groupedData.map((nnb) => (
                     <React.Fragment key={nnb._id || nnb.so_giay_nsh}>
-                      {/* Dòng hiển thị Người Nội Bộ / Tổ chức */}
                       <tr className="bg-indigo-50/70 font-semibold border-b border-slate-200">
                         <td className="p-3 text-[#2e2c7d] font-bold">
                           {nnb.ho_ten}
@@ -254,7 +248,7 @@ export default function Dashboard() {
                           <span className="px-2 py-0.5 text-xs rounded-md bg-indigo-100 text-indigo-800 font-medium">
                             {nnb.typePerson === "TC"
                               ? "Tổ chức"
-                              : nnb.moi_quan_he || "Người nội bộ"}
+                              : "Người nội bộ"}
                           </span>
                         </td>
                         <td className="p-3 text-slate-700">
@@ -262,9 +256,7 @@ export default function Dashboard() {
                         </td>
                       </tr>
 
-                      {/* Các dòng con - Người liên quan (NLQ) */}
                       {nnb.related?.map((nlq: any) => {
-                        // Tìm riêng mqh cụ thể của người này với NNB hiện tại
                         const specRel = nlq.related_nsh?.find(
                           (r: any) =>
                             r.number_nsh?.trim() === nnb.so_giay_nsh?.trim(),
@@ -284,7 +276,6 @@ export default function Dashboard() {
                             </td>
                             <td className="p-3 text-slate-500 italic text-xs">
                               {specRel?.mqh_nsh ||
-                                nlq.moi_quan_he ||
                                 "Người có liên quan"}
                             </td>
                             <td className="p-3 text-slate-500">
@@ -302,7 +293,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Upload Area */}
       <div className="bg-white rounded-2xl shadow overflow-hidden border border-slate-200 mb-8">
         <div className="bg-[#2e2c7d] text-white px-6 py-4 font-semibold tracking-wide">
           CẬP NHẬT DỮ LIỆU ĐỒNG BỘ HỆ THỐNG
@@ -367,7 +357,6 @@ export default function Dashboard() {
                 </button>
               </div>
 
-              {/* Preview Table */}
               <div className="overflow-auto border rounded-xl max-h-125 shadow-sm">
                 <table className="min-w-full text-xs border-collapse">
                   <thead className="sticky top-0 bg-[#2e2c7d] text-white z-10">
@@ -406,7 +395,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Modal Confirm */}
       {showConfirm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-xs flex items-center justify-center z-50 animate-in fade-in duration-200">
           <div className="bg-white rounded-2xl p-6 w-112.5 shadow-2xl">
@@ -437,8 +425,8 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Files Obligation Management Component */}
       <FilesManage onFilesChange={handleFilesChange} />
+
     </div>
   );
 }

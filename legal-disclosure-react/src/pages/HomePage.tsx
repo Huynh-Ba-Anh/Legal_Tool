@@ -5,9 +5,9 @@ import {
   User,
   BadgeInfo,
   AlertTriangle,
-  FileCheck,
   FileText,
-  ArrowDown,
+  Send,
+  Download,
 } from "lucide-react";
 import type { IPerson } from "../ts/IPerson";
 import { legalService } from "../services/legal";
@@ -23,6 +23,11 @@ export default function HomePage() {
   const [file, setFile] = useState<IFile[]>([]);
   const [error, setError] = useState("");
 
+  const [selectedFile, setSelectedFile] = useState<IFile | null>(null);
+
+  const [feedback, setFeedback] = useState("");
+  const [phone, setPhone] = useState("");
+
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmedQuery = searchQuery.trim();
@@ -37,6 +42,7 @@ export default function HomePage() {
       setError("");
       setPerson(null);
       setFile([]);
+      setSelectedFile(null);
 
       const data = await legalService.searchPerson(trimmedQuery);
 
@@ -49,6 +55,9 @@ export default function HomePage() {
       if (data.typePerson) {
         const fileData = await fileService.getObligations(data.typePerson);
         setFile(fileData);
+        if (fileData && fileData.length > 0) {
+          setSelectedFile(fileData[0]);
+        }
       }
     } catch (err: any) {
       setError(err?.response?.data?.message || "Đã có lỗi xảy ra khi tra cứu");
@@ -57,9 +66,15 @@ export default function HomePage() {
     }
   };
 
+  const handleSendFeedback = (e: React.FormEvent) => {
+    e.preventDefault();
+    alert(`Đã nhận ý kiến đóng góp từ SĐT ${phone}`);
+    setFeedback("");
+    setPhone("");
+  };
+
   const renderRelationship = () => {
     if (!person) return null;
-
     const type = person.typePerson?.trim();
 
     switch (type) {
@@ -67,280 +82,354 @@ export default function HomePage() {
         return person.related_info && person.related_info.length > 0 ? (
           <div className="space-y-1.5">
             {person.related_info.map((i) => {
-              // Tìm bản ghi chứa mối quan hệ tương ứng dựa vào số giấy tờ
-              const relation = person.related_nsh?.find(
-                (r) => r.number_nsh === i.so_giay_nsh,
-              );
-
+              const relation = person.related_nsh?.find((r) => r.number_nsh === i.so_giay_nsh);
               return (
-                <div key={i._id || i.ho_ten} className="flex items-start gap-1">
+                <div key={i._id || i.ho_ten} className="text-sm text-slate-700 flex items-start gap-1">
                   <span>
-                    • Người nội bộ{" "}
-                    <strong className="text-slate-900">{i.ho_ten}</strong>
-                    {relation?.mqh_nsh && (
-                      <span className="text-slate-500 text-xs italic ml-1">
-                        {relation.mqh_nsh.replace(/Người nội bộ/i, "")}
-                      </span>
-                    )}
+                    • <strong>{i.ho_ten}</strong>
+                    {relation?.mqh_nsh && <span className="text-slate-500 text-xs italic ml-1"> ({relation.mqh_nsh.replace(/Người nội bộ/i, "")})</span>}
                   </span>
                 </div>
               );
             })}
           </div>
         ) : (
-          <span className="text-slate-500 italic">
-            Tổ chức chưa cập nhật danh sách người nội bộ liên quan.
-          </span>
+          <span className="text-sm text-slate-400 italic">Tổ chức chưa cập nhật người nội bộ liên quan.</span>
         );
-
       case "NNB":
-        return (
-          <div>
-            Chức vụ hiện tại:{" "}
-            <strong className="text-indigo-900">
-              {person.chuc_vu || "Chưa rõ"}
-            </strong>
-          </div>
-        );
-
+        return <div className="text-sm text-slate-700">Chức vụ hiện tại: <strong className="text-indigo-950">{person.chuc_vu || "Chưa rõ"}</strong></div>;
       case "NLQ":
         return person.related_info && person.related_info.length > 0 ? (
-          <div className="space-y-1">
+          <div className="space-y-1.5 text-sm text-slate-700">
             {person.related_info.map((nnb) => {
-              const relation = person.related_nsh?.find(
-                (r: any) => r.number_nsh === nnb.so_giay_nsh,
-              );
-
+              const relation = person.related_nsh?.find((r: any) => r.number_nsh === nnb.so_giay_nsh);
               return (
-                <div
-                  key={nnb._id || nnb.so_giay_nsh}
-                  className="text-slate-700"
-                >
-                  Là{" "}
-                  <strong className="text-amber-700">
-                    {relation?.mqh_nsh || "Người liên quan"}
-                  </strong>{" "}
-                  của NNB:{" "}
-                  <strong className="text-slate-900">{nnb.ho_ten}</strong>
+                <div key={nnb._id || nnb.so_giay_nsh}>
+                  Là <strong className="text-amber-700">{relation?.mqh_nsh || "Người liên quan"}</strong> của NNB: <strong>{nnb.ho_ten}</strong>
                 </div>
               );
             })}
           </div>
         ) : (
-          <span className="text-slate-400 italic">
-            Chưa cập nhật thông tin NNB liên quan
-          </span>
+          <span className="text-sm text-slate-400 italic">Chưa có thông tin NNB liên quan</span>
         );
-
       default:
-        // Xử lý an toàn cho trường hợp mặc định nếu related_nsh là mảng
-        return (
-          <span className="text-slate-500">
-            {Array.isArray(person.related_nsh)
-              ? person.related_nsh.map((r: any) => r.mqh_nsh).join(", ")
-              : "Không xác định"}
-          </span>
-        );
+        return <span className="text-sm text-slate-500">{Array.isArray(person.related_nsh) ? person.related_nsh.map((r: any) => r.mqh_nsh).join(", ") : "Không xác định"}</span>;
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-100">
-      <div
-        className="relative isolate overflow-hidden bg-cover bg-center text-white py-28"
-        style={{
-          backgroundImage: "url('/image copy.png')",
-        }}
-      >
-        {/* Overlay */}
-        <div className="absolute inset-0 bg-linear-to-b from-indigo-900/60 via-indigo-800/40 to-slate-900/60 backdrop-blur-sm" />
+    <div className="min-h-screen bg-linear-to-b from-slate-50 via-slate-100 to-slate-200 flex flex-col font-sans">
 
-        {/* Content */}
-        <div className="relative max-w-5xl mx-auto text-center px-6">
-          {/* Tiêu đề đã được ngắt dòng bằng <br /> */}
-          <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight leading-tight drop-shadow-lg">
-            CÔNG TY CỔ PHẦN <br />
-            ĐẦU TƯ HẠ TẦNG GIAO THÔNG ĐÈO CẢ
-          </h1>
+      <div className="relative overflow-hidden">
+        <div
+          className="relative min-h-130 flex items-center justify-center bg-cover bg-center"
+          style={{ backgroundImage: "url('/image copy.png')" }}
+        >
+          <div className="absolute inset-0 bg-linear-to-br from-[#0f172a]/95 via-[#1e1b4b]/85 to-[#312e81]/90" />
 
-          {/* Đoạn mô tả đã bổ sung cụm "của Người nội bộ" */}
-          <p className="mt-6 text-base md:text-lg text-slate-100/90 max-w-3xl mx-auto leading-relaxed">
-            Phần mềm tra cứu nghĩa vụ công bố thông tin của{" "}
-            <br className="hidden md:inline" />
-            Người nội bộ và Người có liên quan của Người nội bộ
-          </p>
+          <div className="absolute top-10 left-10 w-72 h-72 bg-cyan-500/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl" />
 
-          {/* Arrow */}
-          <div className="mt-10 flex justify-center">
-            <div className="animate-bounce cursor-pointer">
-              <div className="w-14 h-14 rounded-full bg-white/10 border border-white/30 backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition">
-                <ArrowDown size={26} className="text-cyan-300" />
-              </div>
-            </div>
+          <div className="relative z-10 max-w-5xl mx-auto text-center px-6">
+            <span className="inline-flex items-center px-5 py-2 rounded-full bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 text-sm font-medium">
+              Hệ thống tra cứu trực tuyến
+            </span>
+
+            <h1 className="mt-8 text-4xl md:text-6xl font-black leading-tight text-white tracking-tight">
+              ĐẦU TƯ HẠ TẦNG
+              <br />
+              GIAO THÔNG ĐÈO CẢ
+            </h1>
+
+            <p className="mt-6 text-lg text-slate-200 max-w-3xl mx-auto leading-relaxed opacity-90">
+              Phần mềm tra cứu nghĩa vụ công bố thông tin của Người nội bộ và Người có liên quan
+            </p>
           </div>
+        </div>
+
+        <div className="relative z-20 max-w-5xl mx-auto px-4 -mt-14">
+          <form
+            onSubmit={handleSearch}
+            className="
+              bg-white
+              rounded-3xl
+              shadow-[0_20px_60px_rgba(46,44,125,0.15)]
+              border border-slate-100
+              p-5
+            "
+          >
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="relative flex-1">
+                <Search
+                  size={22}
+                  className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400"
+                />
+
+                <input
+                  type="text"
+                  placeholder="Nhập CCCD / CMND để tra cứu..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="
+                    w-full
+                    h-16
+                    pl-14
+                    pr-4
+                    rounded-2xl
+                    bg-slate-50
+                    border-2 border-transparent
+                    focus:border-[#2e2c7d]
+                    focus:bg-white
+                    transition-all
+                    outline-none
+                    text-slate-800
+                    font-medium
+                  "
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="
+                  h-16
+                  px-10
+                  rounded-2xl
+                  bg-linear-to-r
+                  from-[#2e2c7d]
+                  to-[#4338ca]
+                  text-white
+                  font-bold
+                  tracking-wide
+                  hover:scale-105
+                  hover:shadow-xl
+                  transition-all
+                  duration-300
+                  shrink-0
+                "
+              >
+                {loading ? "Đang tìm..." : "TRA CỨU"}
+              </button>
+            </div>
+          </form>
         </div>
       </div>
 
-      {/* Search Section */}
-      <div className="relative z-10 max-w-5xl mx-auto px-4 -mt-20 pb-20">
-        <div className="bg-white rounded-2xl shadow-xl p-6">
-          <form onSubmit={handleSearch} className="flex gap-4">
-            <div className="relative flex-1">
-              <Search
-                size={20}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"
-              />
-              <input
-                type="text"
-                placeholder="Nhập số CCCD / CMND..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#2e2c7d] outline-none"
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="bg-[#2e2c7d] text-white px-8 rounded-xl font-bold hover:bg-[#1f1d56] transition"
-            >
-              {loading ? "Đang tra cứu..." : "TRA CỨU"}
-            </button>
-          </form>
-
-          {error && (
-            <div className="mt-4 bg-red-50 text-red-600 p-4 rounded-xl flex items-center gap-2">
-              <AlertTriangle size={20} /> {error}
-            </div>
-          )}
+      {error && (
+        <div className="max-w-7xl mx-auto w-full px-4 lg:px-6 mt-6">
+          <div className="bg-red-50 border border-red-200 text-red-600 p-4 rounded-2xl flex items-center gap-2 text-sm shadow-sm">
+            <AlertTriangle size={20} /> {error}
+          </div>
         </div>
+      )}
 
-        {/* Result Section */}
-        {person && (
-          <div className="mt-8 space-y-6 animate-in fade-in duration-500">
-            <div className="bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden">
-              <div className="bg-linear-to-r from-[#2e2c7d] to-indigo-600 px-6 py-5 text-white">
-                <div className="flex justify-between items-center">
-                  <h2 className="text-xl font-bold">KẾT QUẢ TRA CỨU</h2>
+      <div className="flex-1 w-full max-w-7xl mx-auto p-4 lg:p-6 mt-6">
+        {person ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch animate-in fade-in duration-300">
 
-                  <span className="px-3 py-1 bg-white/20 rounded-full text-sm">
-                    {person.typePerson === "TC"
-                      ? "Tổ chức"
-                      : person.typePerson === "NNB"
-                        ? "Người nội bộ"
-                        : "Người liên quan"}
+            <section className="bg-white rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.06)] flex flex-col justify-between overflow-hidden">
+              <div>
+                <div className="bg-linear-to-r from-[#2e2c7d] to-[#4338ca] px-5 py-4 flex justify-between items-center">
+                  <h2 className="font-bold text-white text-sm tracking-wide uppercase">Thông tin cá nhân, tổ chức</h2>
+                  <span className="text-[10px] bg-white/20 text-white font-bold px-2 py-0.5 rounded-full">
+                    {person.typePerson === "TC" ? "Tổ chức" : person.typePerson === "NNB" ? "Người nội bộ" : "Người liên quan"}
                   </span>
                 </div>
-              </div>
 
-              <div className="p-6">
-                <div className="grid lg:grid-cols-3 gap-6">
-                  <div className="lg:col-span-2 space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center">
-                        <User className="text-[#2e2c7d]" />
-                      </div>
-
-                      <div>
-                        <h3 className="font-bold text-lg">{person.ho_ten}</h3>
-                        <p className="text-slate-500 text-sm">
-                          {person.so_giay_nsh}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div className="bg-slate-50 rounded-xl p-4">
-                        <p className="text-xs text-slate-500 uppercase">
-                          Mã chứng khoán
-                        </p>
-                        <p className="font-semibold">
-                          {person.ma_chung_khoan || "-"}
-                        </p>
-                      </div>
-
-                      <div className="bg-slate-50 rounded-xl p-4">
-                        <p className="text-xs text-slate-500 uppercase">
-                          Tài khoản giao dịch
-                        </p>
-                        <p className="font-semibold">
-                          {person.tk_giao_dich || "-"}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Khối xử lý mối quan hệ tối ưu hóa */}
-                    <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
-                      <h4 className="font-semibold text-amber-800 mb-2">
-                        Mối quan hệ công bố thông tin
-                      </h4>
-                      <div className="text-sm leading-relaxed text-slate-700">
-                        {renderRelationship()}
-                      </div>
-                    </div>
-                  </div>
-
+                <div className="p-6 space-y-4">
                   <div>
-                    <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 h-full">
-                      <div className="flex items-center gap-2 mb-3">
-                        <BadgeInfo size={18} className="text-blue-600" />
-                        <h4 className="font-semibold text-blue-700">Ghi chú</h4>
-                      </div>
-
-                      <p className="text-sm leading-6 text-slate-700">
-                        {person.ghi_chu ||
-                          "Hệ thống xác định đối tượng thuộc diện công bố thông tin theo quy định hiện hành."}
-                      </p>
+                    <label className="text-[11px] text-slate-400 block uppercase font-bold tracking-wider">Họ và tên:</label>
+                    <p className="font-bold text-slate-900 text-lg">{person.ho_ten}</p>
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-slate-400 block uppercase font-bold tracking-wider">NSH (Số giấy tờ):</label>
+                    <p className="font-semibold text-slate-700 text-sm">{person.so_giay_nsh}</p>
+                  </div>
+                  <div>
+                    <label className="text-[11px] text-slate-400 block uppercase font-bold tracking-wider mb-2">Mối quan hệ pháp lý:</label>
+                    <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 shadow-inner">
+                      {renderRelationship()}
                     </div>
                   </div>
+
+                  {(person.ma_chung_khoan || person.tk_giao_dich) && (
+                    <div className="grid grid-cols-2 gap-3 pt-4 border-t border-slate-100">
+                      <div>
+                        <span className="text-[10px] text-slate-400 block uppercase font-bold">Mã CK</span>
+                        <span className="text-sm font-bold text-[#2e2c7d]">{person.ma_chung_khoan || "-"}</span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-400 block uppercase font-bold">Tài khoản GD</span>
+                        <span className="text-sm font-bold text-[#2e2c7d]">{person.tk_giao_dich || "-"}</span>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
 
-            {/* Khối Nghĩa vụ và Biểu mẫu áp dụng */}
-            <div className="bg-white rounded-3xl shadow-lg border border-slate-200 p-6">
-              <h3 className="font-bold text-lg mb-6 flex items-center gap-2">
-                <FileCheck className="text-green-600" />
-                Nghĩa vụ và biểu mẫu áp dụng
-              </h3>
+              <form onSubmit={handleSendFeedback} className="border-t border-slate-100 bg-slate-50/70 p-5 space-y-3 rounded-b-3xl">
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Ý kiến / Lời nhắn để lại</h3>
+                <textarea
+                  rows={2}
+                  placeholder="Ghi nội dung lời nhắn tại đây..."
+                  value={feedback}
+                  onChange={(e) => setFeedback(e.target.value)}
+                  className="w-full text-xs p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#2e2c7d] focus:border-transparent outline-none bg-white shadow-xs resize-none text-slate-800"
+                  required
+                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Số điện thoại..."
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    className="flex-1 text-xs px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#2e2c7d] focus:border-transparent outline-none bg-white shadow-xs text-slate-800"
+                    required
+                  />
+                  <button
+                    type="submit"
+                    className="bg-linear-to-r from-[#2e2c7d] to-[#4338ca] text-white px-5 py-2 rounded-xl text-xs font-bold hover:opacity-95 transition-all duration-300 shadow-sm flex items-center gap-1.5 shrink-0"
+                  >
+                    <Send size={12} /> GỬI
+                  </button>
+                </div>
+              </form>
+            </section>
 
-              {file && file.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {file.map((item) => (
-                    <div
+            <section className="bg-white rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.06)] flex flex-col overflow-hidden">
+              <div className="bg-linear-to-r from-[#2e2c7d] to-[#4338ca] px-5 py-4">
+                <h2 className="font-bold text-white text-sm tracking-wide uppercase">Nghĩa vụ CBTT, báo cáo</h2>
+              </div>
+              <div className="p-5 flex-1 space-y-3 overflow-y-auto max-h-112.5 md:max-h-137.5">
+                {file && file.length > 0 ? (
+                  file.map((item) => (
+                    <button
                       key={item._id}
-                      className="group bg-white rounded-3xl border border-slate-200 p-6 shadow-sm hover:shadow-xl hover:border-[#2e2c7d] transition-all duration-300 hover:-translate-y-1 flex flex-col"
+                      onClick={() => setSelectedFile(item)}
+                      className={`
+                        w-full
+                        text-left
+                        p-4
+                        rounded-2xl
+                        transition-all
+                        duration-300
+                        border
+                        hover:-translate-y-1
+                        hover:shadow-lg
+                        text-xs
+                        font-semibold
+                        block
+                        relative
+                        pr-8
+                        
+                        ${selectedFile?._id === item._id
+                          ? "border-[#2e2c7d] bg-linear-to-r from-indigo-50 to-cyan-50 text-[#2e2c7d]"
+                          : "border-slate-200 bg-white text-slate-700"
+                        }
+                      `}
                     >
-                      <div className="w-12 h-12 rounded-2xl bg-indigo-50 flex items-center justify-center mb-4">
-                        <FileText size={24} className="text-[#2e2c7d]" />
+                      <div className="line-clamp-2 leading-relaxed">{item.title}</div>
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-60 text-sm">→</div>
+                    </button>
+                  ))
+                ) : (
+                  <p className="text-slate-400 text-xs italic text-center py-8">
+                    Không tìm thấy dữ liệu nghĩa vụ phù hợp.
+                  </p>
+                )}
+              </div>
+            </section>
+
+            <section className="bg-white rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.06)] flex flex-col overflow-hidden">
+              <div className="bg-linear-to-r from-[#2e2c7d] to-[#4338ca] px-5 py-4">
+                <h2 className="font-bold text-white text-sm tracking-wide uppercase">Biểu mẫu áp dụng</h2>
+              </div>
+
+              <div className="p-5 flex-1 flex flex-col justify-between">
+                {selectedFile ? (
+                  <>
+                    <div className="space-y-4 flex-1">
+                      <h3 className="font-bold text-slate-900 text-sm leading-snug">
+                        {selectedFile.title}
+                      </h3>
+                      <div className="
+                        bg-slate-50
+                        border
+                        border-slate-200
+                        rounded-2xl
+                        p-4
+                        leading-relaxed
+                        shadow-inner
+                        text-xs
+                        text-slate-600
+                        max-h-64
+                        overflow-y-auto
+                        whitespace-pre-line
+                      ">
+                        {selectedFile.content}
                       </div>
+                    </div>
 
-                      <h4 className="font-semibold text-slate-800 text-lg mb-2 line-clamp-2">
-                        {item.title}
-                      </h4>
-
-                      <p className="text-sm text-slate-500 flex-1 line-clamp-4">
-                        {item.content}
-                      </p>
-
-                      {item.file && (
+                    {selectedFile.file && (
+                      <div className="pt-4 border-t border-slate-100 mt-4">
+                        <div className="text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wider">Hồ sơ đính kèm:</div>
                         <a
-                          href={`${API_URL}/filesInform/${item._id}/preview`}
+                          href={`${API_URL}/filesInform/${selectedFile._id}/preview`}
                           target="_blank"
                           rel="noreferrer"
-                          className="mt-5 inline-flex items-center justify-center rounded-xl bg-[#2e2c7d] px-4 py-2 text-sm font-medium text-white hover:bg-[#252365] transition"
+                          className="w-full flex items-center justify-between rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 px-4 py-3 text-xs font-medium text-slate-800 transition-all duration-200 shadow-xs"
                         >
-                          Xem biểu mẫu
+                          <div className="flex items-center gap-2.5 truncate">
+                            <FileText size={16} className="text-red-500 shrink-0" />
+                            <span className="font-bold truncate text-slate-700">Mẫu văn bản quy định (BM)</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-indigo-700 font-extrabold shrink-0 ml-2">
+                            <Download size={13} /> Tải về
+                          </div>
                         </a>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-slate-500 text-sm italic">
-                  Không tìm thấy biểu mẫu nghĩa vụ tương thích với đối tượng
-                  này.
-                </p>
-              )}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-center py-20 text-slate-400 text-xs italic">
+                    Vui lòng chọn danh mục báo cáo bên cột trái để xem mẫu văn bản chi tiết.
+                  </div>
+                )}
+              </div>
+            </section>
+
+          </div>
+        ) : (
+          <div className="flex-1 flex items-center justify-center py-24 animate-in fade-in duration-500">
+            <div className="max-w-xl text-center">
+              <div className="
+                w-24 h-24
+                rounded-full
+                bg-linear-to-br
+                from-indigo-500
+                to-cyan-500
+                text-white
+                flex items-center justify-center
+                mx-auto
+                shadow-xl
+              ">
+                <User size={42} />
+              </div>
+
+              <h2 className="mt-8 text-3xl font-bold text-slate-800">
+                Tra cứu nghĩa vụ công bố thông tin
+              </h2>
+
+              <p className="mt-4 text-slate-500 leading-relaxed">
+                Nhập CCCD/CMND hoặc mã số định danh để hệ thống tra cứu
+                thông tin nghĩa vụ công bố thông tin và các biểu mẫu liên quan.
+              </p>
+
+              <div className="mt-8 flex items-start gap-3 bg-indigo-50/50 border border-indigo-100 rounded-2xl p-4 text-left text-xs text-slate-600 max-w-md mx-auto">
+                <BadgeInfo size={18} className="text-[#2e2c7d] shrink-0 mt-0.5" />
+                <span>Cơ sở dữ liệu biểu mẫu động phân tách tự động theo nhóm đối tượng Tổ chức (TC), Người nội bộ (NNB), hoặc Người có liên quan (NLQ).</span>
+              </div>
             </div>
           </div>
         )}

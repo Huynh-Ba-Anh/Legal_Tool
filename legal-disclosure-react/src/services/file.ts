@@ -34,7 +34,6 @@ export const fileService = {
         await client.delete(`filesInform/${id}`);
     },
 
-    // Thêm mới biểu mẫu (Dự phòng cho nút "Thêm biểu mẫu")
     create: async (data: FormData) => {
         const res = await client.post("/filesInform", data, {
             headers: {
