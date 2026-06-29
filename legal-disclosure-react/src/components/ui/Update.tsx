@@ -81,7 +81,25 @@ export default function Update({
                         Nhóm
                     </span>
 
-                    <p>{getTypeText(selectedFile.typePerson)}</p>
+                    {editDraft ? (
+                        <select
+                            value={editDraft.typePerson}
+                            onChange={(e) =>
+                                setEditDraft({
+                                    ...editDraft,
+                                    typePerson: e.target.value,
+                                })
+                            }
+                            className="w-full mt-1 border rounded-xl px-3 py-2 bg-white"
+                        >
+                            <option value="NNB">Người nội bộ</option>
+                            <option value="NLQ">Người liên quan</option>
+                        </select>
+                    ) : (
+                        <p className="text-sm bg-slate-50 p-3 rounded-xl">
+                            {getTypeText(selectedFile.typePerson)}
+                        </p>
+                    )}
                 </div>
 
                 <div className="mt-3">

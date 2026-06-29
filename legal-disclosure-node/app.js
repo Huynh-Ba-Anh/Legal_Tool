@@ -7,6 +7,7 @@ var logger = require('morgan');
 require('dotenv').config();
 
 var connectDb = require('./lib/db');
+const { startHhvScheduler, runHhvCrawler } = require('./cron/hhvScheduler');
 
 var indexRouter = require('./routes/index');
 var personsRouter = require('./routes/persons');
@@ -20,8 +21,10 @@ var supportRouter = require('./routes/support');
 
 var app = express();
 
-connectDb();
-
+connectDb().then(() => {
+  startHhvScheduler();
+  runHhvCrawler();
+});
 
 app.use(logger('dev'));
 app.use(express.json());

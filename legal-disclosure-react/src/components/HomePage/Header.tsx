@@ -33,7 +33,8 @@ export default function Header() {
 
                     <div className="w-px h-7 bg-white/40" />
 
-                    <div className="px-6">
+                    <div className="px-6 flex gap-2">
+
                         <button
                             onClick={() => navigate("/dashboard")}
                             className="
