@@ -185,13 +185,17 @@ export function HhvStock() {
     }));
 
     return (
-        <div className="space-y-2 px-2 md:px-4 py-2 max-w-6xl mx-auto bg-slate-50/50 text-sm">
+        <div className="space-y-4 px-2 md:px-4 py-4 max-w-6xl mx-auto bg-slate-50/50 text-sm">
             <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xs p-3">
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 items-center">
                     <div className="lg:col-span-1 space-y-1.5">
                         <div className="flex items-center gap-2">
-                            <div className="h-7 w-7 shrink-0 rounded-md bg-slate-900 text-white flex items-center justify-center text-[10px] font-bold tracking-wider shadow-inner">
-                                HHV
+                            <div className="h-14 w-14 rounded-full bg-white border border-slate-200 flex items-center justify-center overflow-hidden shadow-sm">
+                                <img
+                                    src="/Logo.png"
+                                    alt="logo"
+                                    className="h-10 w-10 object-contain"
+                                />
                             </div>
                             <div>
                                 <div className="flex items-center gap-1">
