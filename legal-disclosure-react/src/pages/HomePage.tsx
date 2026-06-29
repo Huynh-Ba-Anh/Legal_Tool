@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Search,
   User,
@@ -14,6 +14,7 @@ import { legalService } from "../services/legal";
 import type { IFile } from "../ts/IFile";
 import { fileService } from "../services/file";
 import supportService from "../services/support";
+import { HhvStock } from "../components/Hhv_stock";
 
 const API_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -28,6 +29,14 @@ export default function HomePage() {
   const [feedback, setFeedback] = useState("");
   const [phone, setPhone] = useState("");
   const [sendingSupport, setSendingSupport] = useState(false);
+
+  const resultRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (person && resultRef.current) {
+      resultRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [person]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -110,18 +119,26 @@ export default function HomePage() {
     switch (type) {
       case "TC":
         return person.related_info && person.related_info.length > 0 ? (
-          <div className="space-y-1.5">
-            {person.related_info.map((i) => {
-              const relation = person.related_nsh?.find((r) => r.number_nsh === i.so_giay_nsh);
-              return (
-                <div key={i._id || i.ho_ten} className="text-sm text-slate-700 flex items-start gap-1">
-                  <span>
+          <div className="space-y-1.5 text-sm text-slate-700">
+            <div className="font-medium text-slate-700">
+              Mối quan hệ pháp lý: Người có liên quan của Người nội bộ:
+            </div>
+
+            <div className="space-y-1 pl-3">
+              {person.related_info.map((i) => {
+                const relation = person.related_nsh?.find((r) => r.number_nsh === i.so_giay_nsh);
+                return (
+                  <div key={i._id || i.ho_ten} className="leading-relaxed">
                     • <strong>{i.ho_ten}</strong>
-                    {relation?.mqh_nsh && <span className="text-slate-500 text-xs italic ml-1"> ({relation.mqh_nsh.replace(/Người nội bộ/i, "")})</span>}
-                  </span>
-                </div>
-              );
-            })}
+                    {relation?.mqh_nsh && (
+                      <span className="text-slate-500 text-xs italic ml-1">
+                        ({relation.mqh_nsh.replace(/Người nội bộ/i, "").trim()})
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         ) : (
           <span className="text-sm text-slate-400 italic">Tổ chức chưa cập nhật người nội bộ liên quan.</span>
@@ -135,7 +152,7 @@ export default function HomePage() {
               const relation = person.related_nsh?.find((r: any) => r.number_nsh === nnb.so_giay_nsh);
               return (
                 <div key={nnb._id || nnb.so_giay_nsh}>
-                  Là <strong className="text-amber-700">{relation?.mqh_nsh || "Người liên quan"}</strong> của NNB: <strong>{nnb.ho_ten}</strong>
+                  Là <strong className="text-amber-700">{relation?.mqh_nsh || "Người liên quan"}</strong> của Người nội bộ: <strong>{nnb.ho_ten}</strong>
                 </div>
               );
             })}
@@ -178,7 +195,7 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="relative z-20 max-w-5xl mx-auto px-4 -mt-14">
+        <div className="relative z-20 max-w-5xl mx-auto px-4 -mt-14 space-y-4">
           <form
             onSubmit={handleSearch}
             className="bg-white rounded-3xl shadow-[0_20px_60px_rgba(46,44,125,0.15)] border border-slate-100 p-5"
@@ -204,7 +221,12 @@ export default function HomePage() {
               </button>
             </div>
           </form>
+
+          <div className="w-full pt-1">
+            <HhvStock />
+          </div>
         </div>
+
       </div>
 
       {error && (
@@ -215,9 +237,9 @@ export default function HomePage() {
         </div>
       )}
 
-      <div className="flex-1 w-full max-w-7xl mx-auto p-4 lg:p-6 mt-6">
+      <div className="flex-1 w-full max-w-7xl mx-auto p-4 lg:p-6 mt-4">
         {person ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch animate-in fade-in duration-300">
+          <div ref={resultRef} className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch animate-in fade-in duration-300">
 
             <section className="bg-white rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.06)] flex flex-col justify-between overflow-hidden">
               <div>
@@ -274,7 +296,10 @@ export default function HomePage() {
                     type="text"
                     placeholder="Số điện thoại..."
                     value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, "");
+                      if (value.length <= 11) setPhone(value);
+                    }}
                     className="flex-1 text-xs px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#2e2c7d] focus:border-transparent outline-none bg-white shadow-xs text-slate-800"
                     required
                   />
@@ -318,33 +343,34 @@ export default function HomePage() {
 
             <section className="bg-white rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.06)] flex flex-col overflow-hidden">
               <div className="bg-linear-to-r from-[#2e2c7d] to-[#4338ca] px-5 py-4">
-                <h2 className="font-bold text-white text-sm tracking-wide uppercase">Biểu mẫu áp dụng</h2>
+                <h2 className="font-bold text-white text-sm tracking-wide uppercase">NỘI DUNG VÀ BIỂU MẪU ÁP DỤNG</h2>
               </div>
 
-              <div className="p-5 flex-1 flex flex-col justify-between">
+              <div className="p-5 flex-1 flex flex-col justify-between h-full">
                 {selectedFile ? (
                   <>
-                    <div className="space-y-4 flex-1">
-                      <h3 className="font-bold text-slate-900 text-sm leading-snug">
+                    <div className="space-y-3 flex-1 flex flex-col min-h-0">
+                      <h3 className="font-bold text-slate-900 text-sm leading-snug shrink-0">
                         {selectedFile.title}
                       </h3>
-                      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 leading-relaxed shadow-inner text-xs text-slate-600 max-h-64 overflow-y-auto whitespace-pre-line">
+
+                      <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 leading-relaxed shadow-inner text-sm text-slate-700 overflow-y-auto whitespace-pre-line flex-1 max-h-96">
                         {selectedFile.content}
                       </div>
                     </div>
 
                     {selectedFile.file && (
-                      <div className="pt-4 border-t border-slate-100 mt-4">
-                        <div className="text-[10px] font-bold text-slate-400 mb-2 uppercase tracking-wider">Hồ sơ đính kèm:</div>
+                      <div className="pt-3 border-t border-slate-100 mt-4 shrink-0">
+                        <div className="text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Hồ sơ đính kèm:</div>
                         <a
                           href={`${API_URL}/filesInform/${selectedFile._id}/preview`}
                           target="_blank"
                           rel="noreferrer"
-                          className="w-full flex items-center justify-between rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 px-4 py-3 text-xs font-medium text-slate-800 transition-all duration-200 shadow-xs"
+                          className="w-full flex items-center justify-between rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 px-4 py-2.5 text-xs font-medium text-slate-800 transition-all duration-200 shadow-xs"
                         >
                           <div className="flex items-center gap-2.5 truncate">
                             <FileText size={16} className="text-red-500 shrink-0" />
-                            <span className="font-bold truncate text-slate-700">Mẫu văn bản quy định (BM)</span>
+                            <span className="font-bold truncate text-slate-700">{selectedFile.file.originalName}</span>
                           </div>
                           <div className="flex items-center gap-1 text-indigo-700 font-extrabold shrink-0 ml-2">
                             <Download size={13} /> Tải về
@@ -363,7 +389,7 @@ export default function HomePage() {
 
           </div>
         ) : (
-          <div className="flex-1 flex items-center justify-center py-24 animate-in fade-in duration-500">
+          <div className="flex-1 flex items-center justify-center pt-8 pb-16 animate-in fade-in duration-500">
             <div className="max-w-xl text-center">
               <div className="w-24 h-24 rounded-full bg-linear-to-br from-indigo-500 to-cyan-500 text-white flex items-center justify-center mx-auto shadow-xl">
                 <User size={42} />
@@ -374,7 +400,7 @@ export default function HomePage() {
               </h2>
 
               <p className="mt-4 text-slate-500 leading-relaxed">
-                Nhập mã định danh cá nhân, hoạt mã số thuế để tra cứu nghĩa vụ công bố thông tin và các biểu mẫu liên quan.
+                Nhập mã định danh cá nhân, hoặc mã số thuế để tra cứu nghĩa vụ công bố thông tin và các biểu mẫu liên quan.
               </p>
 
               <div className="mt-8 flex items-start gap-3 bg-indigo-50/50 border border-indigo-100 rounded-2xl p-4 text-left text-xs text-slate-600 max-w-md mx-auto">

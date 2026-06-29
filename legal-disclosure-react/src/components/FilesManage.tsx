@@ -164,7 +164,6 @@ export default function FilesManage({ onFilesChange }: Props) {
                 return type;
         }
     };
-    console.log(selectedFile)
 
 
     return (

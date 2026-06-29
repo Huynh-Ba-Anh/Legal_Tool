@@ -29,7 +29,6 @@ router.post("/import", upload.single("file"), async (req, res) => {
       return res.status(400).json({ message: "Không có dữ liệu để import" });
     }
 
-    // Làm sạch cơ sở dữ liệu trước khi import mới
     if (Person.collection) {
       await Person.collection.deleteMany({});
       console.log("Đã xóa thành công và an toàn");
@@ -53,19 +52,16 @@ router.post("/import", upload.single("file"), async (req, res) => {
         row["Mối quan hệ đối với người nội bộ"] || "",
       ).trim();
 
-      // Tách chuỗi số giấy NSH liên quan thành mảng các chuỗi
       const relatedNshArray = relatedNshRaw
         .split(",")
         .map((i) => i.trim())
         .filter(Boolean);
 
-      // CHUYỂN ĐỔI: Ép cấu trúc mảng chuỗi thành mảng Object phù hợp với Schema [{ number_nsh, mqh_nsh }]
       const related_nsh_objects = relatedNshArray.map((num) => ({
         number_nsh: num,
         mqh_nsh: mqhNshRaw,
       }));
 
-      // Xây dựng object dữ liệu cơ bản sẽ được $set
       const baseUpdate = {
         ma_chung_khoan: row["Mã chứng khoán"] || "HHV",
         ho_ten: row["Họ tên"] || "",
@@ -88,18 +84,15 @@ router.post("/import", upload.single("file"), async (req, res) => {
 
       const isSingle = typePerson === "CCCD" || typePerson === "CMND";
 
-      // SỬA LỖI CÚ PHÁP: Gom toàn bộ lệnh cập nhật vào đúng vị trí nguyên tử tương ứng
       let updateQuery = {};
       if (isSingle) {
-        // Nếu là cá nhân, ghi đè trực tiếp mảng (lấy phần tử đầu tiên hoặc toàn bộ mảng object sạch)
         updateQuery = {
           $set: {
             ...baseUpdate,
-            related_nsh: related_nsh_objects.slice(0, 1), // Lưu mảng chứa 1 object duy nhất cho đúng cấu trúc []
+            related_nsh: related_nsh_objects.slice(0, 1),
           },
         };
       } else {
-        // Nếu là tổ chức/loại hình khác, dùng $set thông tin gốc và dùng $addToSet chuẩn cho mảng object
         updateQuery = {
           $set: baseUpdate,
           $addToSet: {

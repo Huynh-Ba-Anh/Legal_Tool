@@ -30,19 +30,15 @@ router.get("/search", async (req, res) => {
 
     let relatedPeople = [];
 
-    // SỬA LỖI TẠI ĐÂY:
     if (person.related_nsh && person.related_nsh.length > 0) {
-      // Chuyển mảng [{ number_nsh, mqh_nsh }] thành mảng các chuỗi ['035047000747', ...]
       const relatedNumbers = person.related_nsh.map((item) => item.number_nsh);
 
       relatedPeople = await Person.find({
-        so_giay_nsh: { $in: relatedNumbers }, // Truyền mảng chuỗi hợp lệ vào đây
+        so_giay_nsh: { $in: relatedNumbers },
       })
-        .select("ho_ten so_giay_nsh") // Nên lấy thêm so_giay_nsh để phía Client dễ map thông tin đối chiếu nếu cần
+        .select("ho_ten so_giay_nsh")
         .lean();
     }
-
-    console.log(person);
 
     res.json({
       ...person,
