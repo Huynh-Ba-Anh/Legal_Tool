@@ -168,7 +168,8 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-linear-to-b from-slate-50 via-slate-100 to-slate-200 flex flex-col font-sans">
 
-      <div className="relative overflow-hidden">
+      <div className="relative">
+
         <div
           className="relative min-h-130 flex items-center justify-center bg-cover bg-center"
           style={{ backgroundImage: "url('/image copy.png')" }}
@@ -179,54 +180,98 @@ export default function HomePage() {
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl" />
 
           <div className="relative z-10 max-w-5xl mx-auto text-center px-6">
-            <span className="inline-flex items-center px-5 py-2 rounded-full bg-cyan-500/15 border border-cyan-400/30 text-cyan-300 text-sm font-medium">
+            <span className="inline-flex items-center px-4 py-1.5 rounded-full bg-cyan-500/15 border border-cyan-400/30 text-cyan-200 text-xs sm:text-sm font-medium">
               Hệ thống tra cứu trực tuyến
             </span>
 
-            <h1 className="mt-8 text-3xl md:text-5xl font-black leading-tight text-white tracking-tight">
+            <h1 className="mt-6 text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight">
               CÔNG TY CỔ PHẦN
               <br />
               ĐẦU TƯ HẠ TẦNG GIAO THÔNG ĐÈO CẢ
             </h1>
 
-            <p className="mt-6 text-[16px] text-slate-200 max-w-3xl mx-auto leading-relaxed opacity-90">
+            <p className="mt-5 text-sm sm:text-base text-slate-200 max-w-3xl mx-auto opacity-90">
               Phần mềm tra cứu nghĩa vụ công bố thông tin của Người nội bộ và Người có liên quan của người nội bộ
             </p>
           </div>
         </div>
 
-        <div className="relative z-20 max-w-5xl mx-auto px-4 -mt-14 space-y-4">
-          <form
-            onSubmit={handleSearch}
-            className="bg-white rounded-3xl shadow-[0_20px_60px_rgba(46,44,125,0.15)] border border-slate-100 p-5"
-          >
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search size={22} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Nhập Mã định danh cá nhân / Mã số thuế để tra cứu..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full h-16 pl-14 pr-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-[#2e2c7d] focus:bg-white transition-all outline-none text-slate-800 font-medium"
-                />
-              </div>
+        <div className="relative z-10 max-w-6xl mx-auto px-4 py-12">
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="h-16 px-10 rounded-2xl bg-linear-to-r from-[#2e2c7d] to-[#4338ca] text-white font-bold tracking-wide hover:scale-105 hover:shadow-xl transition-all duration-300 shrink-0"
+          <div className="flex items-center justify-center">
+
+            <div className="w-full grid grid-cols-1 xl:grid-cols-[0.8fr_1.2fr] gap-5 items-center">
+
+              <form
+                onSubmit={handleSearch}
+                className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-7 max-w-md w-full mx-auto transition-all duration-300 hover:shadow-md"
               >
-                {loading ? "Đang tìm..." : "TRA CỨU"}
-              </button>
-            </div>
-          </form>
+                <div className="text-center mb-5">
 
-          <div className="w-full pt-1">
-            <HhvStock />
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-indigo-500/70">
+                    Tra cứu nhanh
+                  </p>
+
+                  <h2 className="text-lg font-extrabold text-slate-900 mt-1 tracking-tight">
+                    Nhập thông tin tra cứu
+                  </h2>
+
+                </div>
+
+                <div className="flex flex-col gap-3.5">
+                  <div className="relative group">
+                    <Search
+                      size={16}
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 
+                   transition-colors duration-200 group-focus-within:text-indigo-500"
+                    />
+
+                    <input
+                      type="text"
+                      placeholder="CCCD / Mã số thuế..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full h-11 pl-10 pr-4 rounded-xl
+                   bg-slate-50/80 border border-slate-200/80
+                   placeholder:text-slate-400/90 text-sm font-medium text-slate-700
+                   outline-none transition-all duration-200
+                   hover:bg-slate-100/50 hover:border-slate-300
+                   focus:bg-white focus:border-indigo-500 
+                   focus:ring-4 focus:ring-indigo-500/10"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="h-11 rounded-xl bg-linear-to-r from-[#2e2c7d] to-[#4338ca]
+                 text-white text-sm font-bold tracking-wide
+                 hover:opacity-95 active:scale-[0.99] transition-all duration-150
+                 disabled:opacity-50 disabled:pointer-events-none
+                 shadow-sm shadow-indigo-900/10"
+                  >
+                    {loading ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        Đang tìm...
+                      </span>
+                    ) : (
+                      "TRA CỨU"
+                    )}
+                  </button>
+                </div>
+              </form>
+
+              <div className="w-full">
+                <HhvStock />
+              </div>
+            </div>
+
           </div>
         </div>
-
       </div>
 
       {error && (
@@ -389,7 +434,7 @@ export default function HomePage() {
 
           </div>
         ) : (
-          <div className="flex-1 flex items-center justify-center pt-8 pb-16 animate-in fade-in duration-500">
+          <div className="flex-1 flex items-center justify-center pt-4 pb-16 animate-in fade-in duration-500">
             <div className="max-w-xl text-center">
               <div className="w-24 h-24 rounded-full bg-linear-to-br from-indigo-500 to-cyan-500 text-white flex items-center justify-center mx-auto shadow-xl">
                 <User size={42} />
