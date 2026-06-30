@@ -30,6 +30,7 @@ export default function HomePage() {
   const [phone, setPhone] = useState("");
   const [sendingSupport, setSendingSupport] = useState(false);
 
+  const searchSectionRef = useRef<HTMLDivElement | null>(null);
   const resultRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -37,6 +38,10 @@ export default function HomePage() {
       resultRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [person]);
+
+  const scrollToSearch = () => {
+    searchSectionRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -167,89 +172,63 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-linear-to-b from-slate-50 via-slate-100 to-slate-200 flex flex-col font-sans">
-
       <div className="relative">
-
         <div
-          className="relative min-h-130 flex items-center justify-center bg-cover bg-center"
+          className="relative min-h-130 h-screen flex items-center justify-center bg-cover bg-center"
           style={{ backgroundImage: "url('/image copy.png')" }}
         >
-          <div className="absolute inset-0 bg-linear-to-br from-[#0f172a]/95 via-[#1e1b4b]/85 to-[#312e81]/90" />
-
-          <div className="absolute top-10 left-10 w-72 h-72 bg-cyan-500/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl" />
+          <div className="absolute inset-0 bg-linear-to-br from-[#0f172a]/75 via-[#1e1b4b]/55 to-[#312e81]/60" />
+          <div className="absolute top-10 left-10 w-72 h-72 bg-cyan-500/15 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-500/15 rounded-full blur-3xl" />
 
           <div className="relative z-10 max-w-5xl mx-auto text-center px-6">
-            <span className="inline-flex items-center px-4 py-1.5 rounded-full bg-cyan-500/15 border border-cyan-400/30 text-cyan-200 text-xs sm:text-sm font-medium">
+            <span className="inline-flex items-center px-4 py-1.5 rounded-full bg-cyan-500/20 border border-cyan-400/40 text-cyan-100 text-xs sm:text-sm font-semibold backdrop-blur-xs">
               Hệ thống tra cứu trực tuyến
             </span>
-
-            <h1 className="mt-6 text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight">
-              CÔNG TY CỔ PHẦN
-              <br />
-              ĐẦU TƯ HẠ TẦNG GIAO THÔNG ĐÈO CẢ
+            <h1 className="mt-6 text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight drop-shadow-md">
+              CÔNG TY CỔ PHẦN<br />ĐẦU TƯ HẠ TẦNG GIAO THÔNG ĐÈO CẢ
             </h1>
-
-            <p className="mt-5 text-sm sm:text-base text-slate-200 max-w-3xl mx-auto opacity-90">
+            <p className="mt-5 text-sm sm:text-base text-white max-w-3xl mx-auto font-medium drop-shadow-xs">
               Phần mềm tra cứu nghĩa vụ công bố thông tin của Người nội bộ và Người có liên quan của người nội bộ
             </p>
           </div>
+
+          <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1">
+            <button
+              onClick={scrollToSearch}
+              className="flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-full border border-white/40 bg-white/10 backdrop-blur-xs text-white hover:bg-white/25 active:scale-90 transition-all duration-200 cursor-pointer shadow-lg animate-bounce"
+              title="Cuộn xuống nội dung tra cứu"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="3" stroke="currentColor" className="w-6 h-6 sm:w-7 sm:h-7">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            </button>
+          </div>
         </div>
 
-        <div className="relative z-10 max-w-6xl mx-auto px-4 py-12">
-
+        <div ref={searchSectionRef} className="relative z-10 max-w-6xl mx-auto px-4 py-12 scroll-mt-6">
           <div className="flex items-center justify-center">
-
             <div className="w-full grid grid-cols-1 xl:grid-cols-[0.8fr_1.2fr] gap-5 items-center">
 
-              <form
-                onSubmit={handleSearch}
-                className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-7 max-w-md w-full mx-auto transition-all duration-300 hover:shadow-md"
-              >
+              <form onSubmit={handleSearch} className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-7 max-w-md w-full mx-auto transition-all duration-300 hover:shadow-md">
                 <div className="text-center mb-5">
-
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-indigo-500/70">
-                    Tra cứu nhanh
-                  </p>
-
-                  <h2 className="text-lg font-extrabold text-slate-900 mt-1 tracking-tight">
-                    Nhập thông tin tra cứu
-                  </h2>
-
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-indigo-500/70">Tra cứu nhanh</p>
+                  <h2 className="text-lg font-extrabold text-slate-900 mt-1 tracking-tight">Nhập thông tin tra cứu</h2>
                 </div>
 
                 <div className="flex flex-col gap-3.5">
                   <div className="relative group">
-                    <Search
-                      size={16}
-                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 
-                   transition-colors duration-200 group-focus-within:text-indigo-500"
-                    />
-
+                    <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 transition-colors duration-200 group-focus-within:text-indigo-500" />
                     <input
                       type="text"
                       placeholder="CCCD / Mã số thuế..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full h-11 pl-10 pr-4 rounded-xl
-                   bg-slate-50/80 border border-slate-200/80
-                   placeholder:text-slate-400/90 text-sm font-medium text-slate-700
-                   outline-none transition-all duration-200
-                   hover:bg-slate-100/50 hover:border-slate-300
-                   focus:bg-white focus:border-indigo-500 
-                   focus:ring-4 focus:ring-indigo-500/10"
+                      className="w-full h-11 pl-10 pr-4 rounded-xl bg-slate-50/80 border border-slate-200/80 placeholder:text-slate-400/90 text-sm font-medium text-slate-700 outline-none transition-all duration-200 hover:bg-slate-100/50 hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
                     />
                   </div>
 
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="h-11 rounded-xl bg-linear-to-r from-[#2e2c7d] to-[#4338ca]
-                 text-white text-sm font-bold tracking-wide
-                 hover:opacity-95 active:scale-[0.99] transition-all duration-150
-                 disabled:opacity-50 disabled:pointer-events-none
-                 shadow-sm shadow-indigo-900/10"
-                  >
+                  <button type="submit" disabled={loading} className="h-11 rounded-xl bg-linear-to-r from-[#2e2c7d] to-[#4338ca] text-white text-sm font-bold tracking-wide hover:opacity-95 active:scale-[0.99] transition-all duration-150 disabled:opacity-50 disabled:pointer-events-none shadow-sm shadow-indigo-900/10">
                     {loading ? (
                       <span className="flex items-center justify-center gap-2">
                         <svg className="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
@@ -258,9 +237,7 @@ export default function HomePage() {
                         </svg>
                         Đang tìm...
                       </span>
-                    ) : (
-                      "TRA CỨU"
-                    )}
+                    ) : "TRA CỨU"}
                   </button>
                 </div>
               </form>
@@ -268,8 +245,8 @@ export default function HomePage() {
               <div className="w-full">
                 <HhvStock />
               </div>
-            </div>
 
+            </div>
           </div>
         </div>
       </div>
@@ -398,7 +375,6 @@ export default function HomePage() {
                       <h3 className="font-bold text-slate-900 text-sm leading-snug shrink-0">
                         {selectedFile.title}
                       </h3>
-
                       <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 leading-relaxed shadow-inner text-sm text-slate-700 overflow-y-auto whitespace-pre-line flex-1 max-h-96">
                         {selectedFile.content}
                       </div>
@@ -439,15 +415,12 @@ export default function HomePage() {
               <div className="w-24 h-24 rounded-full bg-linear-to-br from-indigo-500 to-cyan-500 text-white flex items-center justify-center mx-auto shadow-xl">
                 <User size={42} />
               </div>
-
               <h2 className="mt-8 text-3xl font-bold text-slate-800">
                 Tra cứu nghĩa vụ công bố thông tin
               </h2>
-
               <p className="mt-4 text-slate-500 leading-relaxed">
                 Nhập mã định danh cá nhân, hoặc mã số thuế để tra cứu nghĩa vụ công bố thông tin và các biểu mẫu liên quan.
               </p>
-
               <div className="mt-8 flex items-start gap-3 bg-indigo-50/50 border border-indigo-100 rounded-2xl p-4 text-left text-xs text-slate-600 max-w-md mx-auto">
                 <BadgeInfo size={18} className="text-[#2e2c7d] shrink-0 mt-0.5" />
                 <span>Cơ sở dữ liệu dựa trên thông tin danh sách Người nội bộ và Người có liên quan của người nội bộ.</span>
