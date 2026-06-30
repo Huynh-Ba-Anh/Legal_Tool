@@ -1,5 +1,6 @@
+/* eslint-disable react-hooks/preserve-manual-memoization */
 /* eslint-disable react-hooks/set-state-in-effect */
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { legalService } from '../services/legal';
 
 interface HhvData {
@@ -11,29 +12,27 @@ interface HhvData {
     volume: number;
 }
 
-const formatMoney = (value: number) => value.toLocaleString('vi-VN', { maximumFractionDigits: 2 });
+const formatMoney = (value: number) => {
+    if (value === null || Number.isNaN(value)) return '--';
+    const realPrice = value * 1000;
+    return realPrice.toLocaleString('vi-VN', { maximumFractionDigits: 0 });
+};
+
 const formatVolume = (value: number) => `${(value / 1000).toLocaleString('vi-VN', { maximumFractionDigits: 0 })}K`;
 const formatPercent = (value: number | null) =>
-    value === null || Number.isNaN(value)
-        ? '--'
-        : `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
+    value === null || Number.isNaN(value) ? '--' : `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
 
-const buildSparklinePath = (values: number[], width: number, height: number) => {
-    if (values.length === 0) return { line: '', area: '' };
-    const min = Math.min(...values);
-    const max = Math.max(...values);
+const buildSparklinePath = (values: number[], width: number, height: number, min: number, max: number) => {
+    if (values.length === 0) return { line: '', area: '', points: [] };
     const diff = max - min || 1;
-
     const points = values.map((value, index) => {
         const x = (index / (values.length - 1)) * width;
         const y = height - ((value - min) / diff) * height;
-        return { x, y };
+        return { x, y, value };
     });
-
     const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
     const areaPath = `${linePath} L ${points[points.length - 1].x} ${height} L ${points[0].x} ${height} Z`;
-
-    return { line: linePath, area: areaPath };
+    return { line: linePath, area: areaPath, points };
 };
 
 const isInMarketSession = (): boolean => {
@@ -42,25 +41,12 @@ const isInMarketSession = (): boolean => {
     const hours = now.getHours();
     const minutes = now.getMinutes();
     const timeInMinutes = hours * 60 + minutes;
-
     return day >= 1 && day <= 5 && timeInMinutes >= 9 * 60 && timeInMinutes < 15 * 60;
-};
-
-const formatAbsoluteTime = (timestamp: number): string => {
-    if (!timestamp) return '---';
-    const date = new Date(timestamp);
-    const time = date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    const dateStr = date.toLocaleDateString('vi-VN');
-    return `${time} - ${dateStr}`;
 };
 
 export function HhvStock() {
     const [data, setData] = useState<HhvData[]>([]);
-    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [lastUpdateTime, setLastUpdateTime] = useState<number>(0);
-    const [displayTime, setDisplayTime] = useState<string>('Đang đồng bộ...');
-    const [showHistory, setShowHistory] = useState(false);
     const [sessionActive, setSessionActive] = useState(isInMarketSession());
     const [selectedRange, setSelectedRange] = useState<string>('1M');
 
@@ -73,66 +59,28 @@ export function HhvStock() {
             const hhvData = await legalService.getHhvDataCached();
             const currentData = hhvData || [];
             setData(currentData);
-
-            const now = Date.now();
-            setLastUpdateTime(now);
-
-            const activeSession = isInMarketSession();
-            setSessionActive(activeSession);
+            setSessionActive(isInMarketSession());
 
             if (currentData.length > 0) {
                 const newPrice = currentData[0].close;
                 if (prevPriceRef.current !== null && prevPriceRef.current !== newPrice) {
-                    if (newPrice > prevPriceRef.current) {
-                        setFlashClass('bg-emerald-500/10 text-emerald-600 transition-all duration-200 rounded px-1');
-                    } else {
-                        setFlashClass('bg-rose-500/10 text-rose-600 transition-all duration-200 rounded px-1');
-                    }
-                    setTimeout(() => setFlashClass(''), 800);
+                    setFlashClass(
+                        newPrice > prevPriceRef.current
+                            ? 'animate-[pulse_0.4s_ease-in-out] scale-[1.03] !text-emerald-400 [text-shadow:_0_0_15px_rgba(16,185,129,0.6)]'
+                            : 'animate-[pulse_0.4s_ease-in-out] scale-[1.03] !text-rose-400 [text-shadow:_0_0_15px_rgba(244,63,94,0.6)]'
+                    );
+                    setTimeout(() => setFlashClass(''), 1000);
                 }
                 prevPriceRef.current = newPrice;
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Không thể lấy dữ liệu');
-        } finally {
-            setLoading(false);
         }
     };
 
     useEffect(() => {
-        if (!lastUpdateTime) return;
-
-        const updateTimeDisplay = () => {
-            const isNowActive = isInMarketSession();
-            setSessionActive(isNowActive);
-
-            if (isNowActive) {
-                const diffSec = Math.floor((Date.now() - lastUpdateTime) / 1000);
-                let relativeStr = 'Vừa xong';
-                if (diffSec >= 60) {
-                    const diffMin = Math.floor(diffSec / 60);
-                    relativeStr = `${diffMin} phút trước`;
-                } else if (diffSec > 0) {
-                    relativeStr = `${diffSec} giây trước`;
-                }
-                setDisplayTime(`Cập nhật: ${relativeStr} (${formatAbsoluteTime(lastUpdateTime)})`);
-            } else {
-                setDisplayTime(`Đóng phiên - Dữ liệu cuối: ${formatAbsoluteTime(lastUpdateTime)}`);
-            }
-        };
-
-        updateTimeDisplay();
-        const timer = setInterval(updateTimeDisplay, 1000);
-        return () => clearInterval(timer);
-    }, [lastUpdateTime]);
-
-    useEffect(() => {
         fetchData();
-        const interval = setInterval(() => {
-            if (isInMarketSession()) {
-                fetchData();
-            }
-        }, 5000);
+        const interval = setInterval(() => { fetchData(); }, 60000);
         return () => clearInterval(interval);
     }, []);
 
@@ -173,90 +121,98 @@ export function HhvStock() {
     const metrics = Object.values(metricsConfig);
     const activeMetric = metricsConfig[selectedRange] || metricsConfig['1M'];
     const mainSparklineData = activeMetric.values.slice().reverse();
-    const mainSparkline = buildSparklinePath(mainSparklineData, 300, 45);
+
+    const minPrice = useMemo(() => {
+        if (mainSparklineData.length === 0) return 0;
+        return Math.min(...mainSparklineData) * 0.995;
+    }, [mainSparklineData]);
+
+    const maxPrice = useMemo(() => {
+        if (mainSparklineData.length === 0) return 1;
+        return Math.max(...mainSparklineData) * 1.005;
+    }, [mainSparklineData]);
+
+    const chartWidth = 265;
+    const chartHeight = 60;
+
+    const mainSparkline = buildSparklinePath(mainSparklineData, chartWidth, chartHeight, minPrice, maxPrice);
 
     const isPositive = priceChange >= 0;
     const chartAccent = activeMetric.positive ? '#10b981' : '#ef4444';
     const fillId = activeMetric.positive ? 'gradient-green' : 'gradient-red';
 
-    const rangeButtons = (['1D', '5D', '1M', '6M', '1Y', 'ALL'] as const).map((range) => ({
-        range,
-        label: range,
-    }));
+    const yGridLines = useMemo(() => {
+        const lines = [];
+        const steps = 4;
+        const priceDiff = maxPrice - minPrice;
+        for (let i = 0; i <= steps; i++) {
+            const ratio = i / steps;
+            lines.push({ y: chartHeight - ratio * chartHeight, price: minPrice + ratio * priceDiff });
+        }
+        return lines;
+    }, [minPrice, maxPrice, chartHeight]);
+
+    const lastPoint = mainSparkline.points.length > 0 ? mainSparkline.points[mainSparkline.points.length - 1] : null;
+    const labelX = chartWidth + 6;
+    const labelY = lastPoint ? Math.min(Math.max(lastPoint.y - 6, 0), chartHeight - 12) : 0;
+
+    const rangeButtons = (['1D', '5D', '1M', '6M', '1Y', 'ALL'] as const).map((range) => ({ range, label: range }));
 
     return (
-        <div className="space-y-4 px-2 md:px-4 py-4 max-w-6xl mx-auto bg-slate-50/50 text-sm">
-            <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-xs p-3">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 items-center">
-                    <div className="lg:col-span-1 space-y-1.5">
-                        <div className="flex items-center gap-2">
-                            <div className="h-14 w-14 rounded-full bg-white border border-slate-200 flex items-center justify-center overflow-hidden shadow-sm">
-                                <img
-                                    src="/Logo.png"
-                                    alt="logo"
-                                    className="h-10 w-10 object-contain"
-                                />
+        <>
+            {/* Main Widget Card */}
+            <div className={`overflow-hidden rounded-xl border border-slate-200/80 p-4 shadow-xs transition-all duration-500 ${isPositive ? 'bg-linear-to-br from-white via-emerald-50/20 to-white' : 'bg-linear-to-br from-white via-rose-50/20 to-white'}`}>
+
+                {/* Header Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-7 gap-4 items-center">
+                    {/* Left Side: Info & Price */}
+                    <div className="space-y-2 md:col-span-2">
+                        <div className="flex items-center gap-3">
+                            <div className="h-12 w-12 rounded-xl bg-white border border-slate-100 flex items-center justify-center p-1 shadow-2xs shrink-0">
+                                <img src="/Logo.png" alt="logo" className="h-full w-full object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                             </div>
-                            <div>
-                                <div className="flex items-center gap-1">
+                            <div className="min-w-0">
+                                <div className="flex items-center gap-1.5">
                                     <h1 className="text-base font-bold text-slate-900 tracking-tight">HHV</h1>
-                                    <span className="px-1 py-0.5 text-[9px] font-semibold rounded bg-slate-100 text-slate-600">HOSE</span>
+                                    <span className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-slate-100 text-slate-500 tracking-wide">HOSE</span>
                                 </div>
-                                <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wide truncate max-w-50">
-                                    Hạ tầng Giao thông Đèo Cả
-                                </p>
+                                <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider truncate">Hạ tầng Giao thông Đèo Cả</p>
                             </div>
                         </div>
 
-                        <div className={`flex items-baseline gap-x-2 pt-1 border-t border-slate-100 transition-all duration-300 ${flashClass}`}>
-                            <span className="text-2xl font-black tracking-tight text-slate-900">
+                        <div className="pt-2 border-t border-slate-100/80 flex items-center gap-3">
+                            <span className={`text-2xl font-extrabold tracking-tight transition-all duration-300 transform-gpu ${flashClass} ${isPositive ? 'text-emerald-500 drop-shadow-[0_0_10px_rgba(16,185,129,0.25)]' : 'text-rose-500 drop-shadow-[0_0_10px_rgba(244,63,94,0.25)]'}`}>
                                 {latestData ? formatMoney(latestData.close) : '--'}
                             </span>
-                            <span className={`text-xs font-bold ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                {latestData ? `${isPositive ? '+' : ''}${changePercent}%` : '--'}
+                            <span className={`relative text-sm font-extrabold px-2 py-0.5 rounded-md border transition-all duration-300 shrink-0 ${isPositive ? 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20 shadow-[0_0_12px_rgba(16,185,129,0.2)]' : 'text-rose-500 bg-rose-500/10 border-rose-500/20 shadow-[0_0_12px_rgba(244,63,94,0.2)]'}`}>
+                                {latestData ? `${isPositive ? '▲ +' : '▼ '}${changePercent}%` : '--'}
                             </span>
                         </div>
 
-                        <div className="flex items-center gap-2 text-[10px]">
-                            <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full font-medium border ${sessionActive
-                                ? 'bg-blue-50 text-blue-700 border-blue-200/50'
-                                : 'bg-slate-50 text-slate-500 border-slate-200'
-                                }`}>
-                                {sessionActive && (
-                                    <span className="relative flex h-1 w-1">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-1 w-1 bg-blue-600"></span>
-                                    </span>
-                                )}
-                                <span className="font-mono">{displayTime}</span>
+                        {/* Thẻ hiển thị thời gian đồng bộ từ DB */}
+                        <div className="flex items-center select-none">
+                            <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500/90 bg-slate-100/60 border border-slate-200/40 px-2 py-1 rounded-md">
+                                <span className={`h-2 w-2 rounded-full inline-block shrink-0 ${sessionActive ? 'bg-emerald-600 shadow-[0_0_6px_#10b981]' : 'bg-slate-400'}`} />
+                                <span className="text-[11px] font-medium">{sessionActive ? 'Đang giao dịch' : 'Đóng phiên'}</span>
                             </div>
                         </div>
                     </div>
 
-                    <div className="lg:col-span-2 rounded-lg border border-slate-200 bg-linear-to-b from-slate-50/50 to-white p-2.5 shadow-xs relative overflow-hidden flex flex-col justify-between min-h-25">
-                        <div className="flex items-center justify-between mb-1">
-                            <div className="flex items-center gap-1.5">
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Đồ thị</span>
-                                <div className="flex gap-0.5">
-                                    {rangeButtons.map(({ range }) => (
-                                        <button
-                                            key={range}
-                                            onClick={() => setSelectedRange(range)}
-                                            className={`px-1.5 py-0.5 text-[10px] font-semibold rounded transition ${selectedRange === range
-                                                ? 'bg-slate-900 text-white'
-                                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                                                }`}
-                                        >
-                                            {range}
-                                        </button>
-                                    ))}
-                                </div>
+                    {/* Right Side: Chart Panel */}
+                    <div className="rounded-xl border border-slate-200/80 bg-white p-4 flex flex-col justify-between min-h-60 shadow-2xs md:col-span-5">
+                        <div className="flex items-center justify-end gap-2 border-b border-slate-100 pb-1.5">
+                            <div className="flex gap-0.5 bg-slate-100 p-0.5 rounded-md">
+                                {rangeButtons.map(({ range }) => (
+                                    <button key={range} type="button" onClick={() => setSelectedRange(range)} className={`px-2 py-0.5 text-[10px] font-bold rounded-sm transition-all ${selectedRange === range ? 'bg-slate-950 text-white shadow-2xs' : 'text-slate-500 hover:text-slate-900'}`}>
+                                        {range}
+                                    </button>
+                                ))}
                             </div>
-                            <span className="text-[10px] text-slate-400 font-mono">{mainSparklineData.length} phiên</span>
                         </div>
 
-                        <div className="h-12 w-full pt-1">
-                            <svg viewBox="0 0 300 45" width="100%" height="100%" preserveAspectRatio="none" className="overflow-visible">
+                        {/* SVG Chart */}
+                        <div className="h-40 w-full pt-2 relative">
+                            <svg viewBox="0 0 340 60" width="100%" height="100%" preserveAspectRatio="none" className="overflow-visible">
                                 <defs>
                                     <linearGradient id="gradient-green" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="0%" stopColor="#10b981" stopOpacity="0.12" />
@@ -267,155 +223,90 @@ export function HhvStock() {
                                         <stop offset="100%" stopColor="#ef4444" stopOpacity="0.0" />
                                     </linearGradient>
                                 </defs>
-                                {mainSparkline.area && (
-                                    <path d={mainSparkline.area} fill={`url(#${fillId})`} className="transition-all duration-300" />
-                                )}
-                                {mainSparkline.line && (
-                                    <path d={mainSparkline.line} fill="none" stroke={chartAccent} strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" className="transition-all duration-300" />
+
+                                {/* Các đường kẻ ngang */}
+                                {yGridLines.map((line, idx) => (
+                                    <g key={idx} className="opacity-40">
+                                        <line x1="0" y1={line.y} x2={chartWidth} y2={line.y} stroke="#e2e8f0" strokeWidth="0.8" strokeDasharray={idx === 0 || idx === 4 ? '0' : '3,3'} />
+                                        <text x={chartWidth + 6} y={line.y + 3} fill="#94a3b8" fontSize="8" fontFamily="monospace" fontWeight="600" textAnchor="start">
+                                            {formatMoney(line.price)}
+                                        </text>
+                                    </g>
+                                ))}
+
+                                {mainSparkline.area && <path d={mainSparkline.area} fill={`url(#${fillId})`} className="transition-all duration-300" />}
+                                {mainSparkline.line && <path d={mainSparkline.line} fill="none" stroke={chartAccent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="transition-all duration-300" />}
+
+                                {lastPoint && latestData && (
+                                    <g>
+                                        <circle cx={lastPoint.x} cy={lastPoint.y} r="3" fill={chartAccent} />
+                                        <circle cx={lastPoint.x} cy={lastPoint.y} r="6" fill={chartAccent} className="animate-pulse opacity-40" />
+                                        <g transform={`translate(${labelX}, ${labelY})`}>
+                                            <rect width="40" height="12" rx="2" fill={chartAccent} />
+                                            <text x="5" y="9" fill="#ffffff" fontSize="8" fontWeight="bold" fontFamily="monospace" textAnchor="start">
+                                                {formatMoney(latestData.close)}
+                                            </text>
+                                        </g>
+                                    </g>
                                 )}
                             </svg>
                         </div>
                     </div>
                 </div>
 
-                <div className="mt-3 grid grid-cols-5 gap-1.5 pt-2 border-t border-slate-100">
+                {/* Bottom Row: Key Financial Metrics */}
+                <div className="mt-4 grid grid-cols-5 gap-2 pt-3 border-t border-slate-100">
                     {[
                         { label: 'Mở', value: latestData?.open },
                         { label: 'Cao', value: latestData?.high, highlight: 'text-emerald-600' },
                         { label: 'Thấp', value: latestData?.low, highlight: 'text-rose-600' },
-                        { label: 'Đóng', value: latestData?.close, highlight: 'font-bold' },
-                        { label: 'KL', value: latestData?.volume, isVol: true },
+                        { label: 'Đóng', value: latestData?.close, highlight: 'font-bold text-slate-900' },
+                        { label: 'Khối lượng', value: latestData?.volume, isVol: true },
                     ].map((item) => (
-                        <div key={item.label} className="bg-slate-50/60 rounded-md p-1.5 border border-slate-100 text-center">
-                            <p className="text-[9px] font-bold uppercase tracking-wider text-slate-400">
-                                {item.label}
-                            </p>
-                            <p className={`text-[12px] font-semibold text-slate-800 ${item.highlight || ''}`}>
-                                {item.value
-                                    ? (item.isVol ? formatVolume(item.value) : formatMoney(item.value))
-                                    : '--'}
+                        <div key={item.label} className="bg-slate-50/50 rounded-lg p-2 border border-slate-400 text-center flex flex-col justify-center">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-0.5 truncate">{item.label}</p>
+                            <p className={`text-xs font-bold text-slate-700 ${item.highlight || ''}`}>
+                                {item.value ? (item.isVol ? formatVolume(item.value) : formatMoney(item.value)) : '--'}
                             </p>
                         </div>
                     ))}
                 </div>
-            </div>
+            </div >
 
-            <div className="grid grid-cols-4 sm:grid-cols-7 gap-1">
+            {/* Bottom Multi-Range Performance Quick-View */}
+            <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5 py-2">
                 {metrics.map((metric) => {
-                    const miniSpark = buildSparklinePath(metric.values.slice().reverse(), 80, 16);
+                    const miniSparkMin = metric.values.length > 0 ? Math.min(...metric.values) : 0;
+                    const miniSparkMax = metric.values.length > 0 ? Math.max(...metric.values) : 1;
+                    const miniSpark = buildSparklinePath(metric.values.slice().reverse(), 80, 16, miniSparkMin, miniSparkMax);
                     const isActive = selectedRange === metric.label;
 
                     return (
-                        <button
-                            key={metric.label}
-                            type="button"
-                            onClick={() => setSelectedRange(metric.label)}
-                            className={`rounded-md p-1.5 border text-left shadow-2xs transition-all flex flex-col justify-between cursor-pointer group ${isActive
-                                ? 'bg-slate-900 border-slate-900 text-white'
-                                : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'
-                                }`}
-                        >
-                            <div className="flex items-center justify-between gap-1 w-full text-[10px]">
-                                <span className="font-bold text-slate-400">{metric.label}</span>
-                                <span className={`font-bold ${isActive ? 'text-white' : (metric.positive ? 'text-emerald-600' : 'text-rose-600')}`}>
-                                    {metric.value}
-                                </span>
+                        <button key={metric.label} type="button" onClick={() => setSelectedRange(metric.label)} className={`relative overflow-hidden rounded-xl p-2 border text-left flex flex-col justify-between cursor-pointer group select-none transition-all duration-300 ${isActive ? 'bg-linear-to-br from-slate-900 via-slate-900 to-slate-800 border-slate-700 text-white scale-[1.05] shadow-[0_10px_30px_rgba(0,0,0,0.35)] ring-1 ring-white/10' : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-linear-to-br hover:from-slate-50 hover:to-white hover:shadow-md text-slate-700'}`}>
+                            <div className={`absolute inset-0 pointer-events-none transition-opacity duration-300 ${isActive ? 'opacity-100 bg-white/5' : 'opacity-0'}`} />
+
+                            <div className="relative flex items-center justify-between w-full text-[10px] font-semibold">
+                                <span className={isActive ? 'text-white/60' : 'text-slate-400'}>{metric.label}</span>
+                                <span className={`font-bold tracking-tight ${isActive ? 'text-white' : metric.positive ? 'text-emerald-600' : 'text-rose-600'}`}>{metric.value}</span>
                             </div>
-                            <div className="mt-1 h-3 w-full overflow-hidden opacity-60 group-hover:opacity-100">
+
+                            <div className="relative mt-1.5 h-3.5 w-full overflow-hidden opacity-80 group-hover:opacity-100 transition-opacity">
                                 <svg viewBox="0 0 80 16" className="h-full w-full" preserveAspectRatio="none">
-                                    {miniSpark.line && (
-                                        <path
-                                            d={miniSpark.line}
-                                            fill="none"
-                                            stroke={isActive ? '#ffffff' : (metric.positive ? '#10b981' : '#ef4444')}
-                                            strokeWidth="1"
-                                            strokeLinecap="round"
-                                        />
-                                    )}
+                                    {miniSpark.line && <path d={miniSpark.line} fill="none" stroke={isActive ? '#ffffff' : metric.positive ? '#10b981' : '#ef4444'} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="transition-all duration-300" />}
                                 </svg>
                             </div>
                         </button>
                     );
                 })}
-            </div>
+            </div >
 
+            {/* Error handling alert */}
             {error && (
-                <div className="rounded-md border border-rose-100 bg-rose-50 p-2 text-[11px] text-rose-700 font-medium flex items-center gap-1">
-                    <span className="w-1 h-1 rounded-full bg-rose-500 animate-pulse" />
-                    {error}
+                <div className="rounded-lg border border-rose-100 bg-rose-50 p-2.5 text-xs text-rose-700 font-semibold flex items-center gap-2 animate-fade-in">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shrink-0" />
+                    <span>{error}</span>
                 </div>
             )}
-
-            <div className="rounded-lg border border-slate-200 bg-white shadow-xs overflow-hidden">
-                <div className="px-3 py-2 border-b border-slate-100 flex items-center justify-between">
-                    <div>
-                        <h2 className="text-xs font-bold text-slate-900 tracking-tight inline-flex items-center gap-2">
-                            Lịch sử 10 phiên
-                        </h2>
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                        <button
-                            onClick={() => setShowHistory((prev) => !prev)}
-                            className="px-2 py-0.5 rounded border border-slate-200 bg-white text-[10px] font-bold text-slate-600 hover:bg-slate-50 cursor-pointer"
-                        >
-                            {showHistory ? 'Ẩn' : 'Xem'}
-                        </button>
-                        <button
-                            onClick={fetchData}
-                            disabled={loading}
-                            className="px-2 py-0.5 rounded bg-slate-900 text-white text-[10px] font-bold hover:bg-slate-800 disabled:bg-slate-300 cursor-pointer"
-                        >
-                            {loading ? '...' : 'Tải lại'}
-                        </button>
-                        <a
-                            href="https://finance.vietstock.vn/HHV-ctcp-dau-tu-ha-tang-giao-thong-deo-ca.htm"
-                            target="_blank"
-                            rel="noreferrer"
-                            className="rounded border border-slate-200 px-2 py-0.5 text-[10px] font-bold text-slate-600 hover:bg-slate-50"
-                        >
-                            Link ↗
-                        </a>
-                    </div>
-                </div>
-
-                {showHistory && (
-                    <div className="overflow-x-auto max-h-45 overflow-y-auto">
-                        <table className="w-full text-[11px] text-left border-collapse">
-                            <thead className="sticky top-0 bg-slate-50 shadow-xs z-10">
-                                <tr className="border-b border-slate-200 text-[9px] font-bold uppercase tracking-wider text-slate-400">
-                                    <th className="px-3 py-1.5">Ngày</th>
-                                    <th className="px-3 py-1.5 text-right">Mở cửa</th>
-                                    <th className="px-3 py-1.5 text-right">Cao nhất</th>
-                                    <th className="px-3 py-1.5 text-right">Thấp nhất</th>
-                                    <th className="px-3 py-1.5 text-right">Đóng cửa</th>
-                                    <th className="px-3 py-1.5 text-right">Khối lượng</th>
-                                </tr>
-                            </thead>
-
-                            <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                                {data.slice(0, 10).map((item, idx) => {
-                                    const isRowPositive = idx < data.length - 1 ? item.close >= data[idx + 1].close : true;
-                                    return (
-                                        <tr key={idx} className="hover:bg-slate-50/60">
-                                            <td className="px-3 py-1 text-slate-500 font-mono">
-                                                {new Date(item.time).toLocaleDateString('vi-VN')}
-                                            </td>
-                                            <td className="px-3 py-1 text-right font-mono">{formatMoney(item.open)}</td>
-                                            <td className="px-3 py-1 text-right text-emerald-600 font-mono">{formatMoney(item.high)}</td>
-                                            <td className="px-3 py-1 text-right text-rose-600 font-mono">{formatMoney(item.low)}</td>
-                                            <td className={`px-3 py-1 text-right font-mono font-bold ${isRowPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                                {formatMoney(item.close)}
-                                            </td>
-                                            <td className="px-3 py-1 text-right text-slate-500 font-mono">{formatVolume(item.volume)}</td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-                )}
-            </div>
-        </div>
+        </>
     );
 }
