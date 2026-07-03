@@ -15,7 +15,7 @@ router.get("/search", async (req, res) => {
     if (!person) {
       return res
         .status(404)
-        .json({ message: "Không tìm thấy thông tin của đối tượng này" });
+        .json({ message: "Số giấy tờ này hiện không nằm trong danh sách Người nội bộ hoặc Người có liên quan của công ty. Nếu thông tin bạn nhập là chính xác, có thể tài khoản của bạn chưa được cập nhật dữ liệu này.Không tìm thấy thông tin của đối tượng này" });
     }
 
     let typePerson = null;

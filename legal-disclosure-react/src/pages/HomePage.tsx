@@ -61,11 +61,6 @@ export default function HomePage() {
 
       const data = await legalService.searchPerson(trimmedQuery);
 
-      if (!data || Object.keys(data).length === 0) {
-        setError("Không tìm thấy thông tin cho số giấy tờ này");
-        return;
-      }
-
       setPerson(data);
       if (data.typePerson) {
         const fileData = await fileService.getObligations(data.typePerson);
@@ -181,15 +176,13 @@ export default function HomePage() {
           <div className="absolute top-10 left-10 w-72 h-72 bg-cyan-500/15 rounded-full blur-3xl" />
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-500/15 rounded-full blur-3xl" />
 
-          <div className="relative z-10 max-w-5xl mx-auto text-center px-6">
-            <span className="inline-flex items-center px-4 py-1.5 rounded-full bg-cyan-500/20 border border-cyan-400/40 text-cyan-100 text-xs sm:text-sm font-semibold backdrop-blur-xs">
-              Hệ thống tra cứu trực tuyến
-            </span>
-            <h1 className="mt-6 text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight drop-shadow-md">
-              CÔNG TY CỔ PHẦN<br />ĐẦU TƯ HẠ TẦNG GIAO THÔNG ĐÈO CẢ
+          <div className="relative z-10 max-w-5xl mx-auto text-center px-4 sm:px-6 pt-4 md:pt-6 pb-8 md:pb-12 -mt-4 sm:-mt-8 selection:bg-amber-500 selection:text-white">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight leading-snug sm:leading-tight uppercase drop-shadow-[0_4px_6px_rgba(0,0,0,0.4)]">
+              CÔNG TY CỔ PHẦN ĐẦU TƯ HẠ TẦNG GIAO THÔNG ĐÈO CẢ
             </h1>
-            <p className="mt-5 text-sm sm:text-base text-white max-w-3xl mx-auto font-medium drop-shadow-xs">
-              Phần mềm tra cứu nghĩa vụ công bố thông tin của Người nội bộ và Người có liên quan của người nội bộ
+
+            <p className="mt-6 max-w-4xl mx-auto text-[11px] sm:text-xs md:text-sm font-semibold uppercase tracking-wide leading-6 text-white/95 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
+              CỔNG TRA CỨU VÀ HỖ TRỢ CÔNG BỐ THÔNG TIN CHO NGƯỜI NỘI BỘ VÀ NGƯỜI CÓ LIÊN QUAN CỦA NGƯỜI NỘI BỘ CÔNG TY CỔ PHẦN ĐẦU TƯ HẠ TẦNG GIAO THÔNG ĐÈO CẢ
             </p>
           </div>
 
@@ -206,13 +199,12 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div ref={searchSectionRef} className="relative z-10 max-w-6xl mx-auto px-4 py-12 scroll-mt-6">
+        <div ref={searchSectionRef} className="relative z-10 max-w-6xl mx-auto px-4 pt-12 scroll-mt-6">
           <div className="flex items-center justify-center">
             <div className="w-full grid grid-cols-1 xl:grid-cols-[0.8fr_1.2fr] gap-5 items-center">
 
               <form onSubmit={handleSearch} className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-7 max-w-md w-full mx-auto transition-all duration-300 hover:shadow-md">
                 <div className="text-center mb-5">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-indigo-500/70">Tra cứu nhanh</p>
                   <h2 className="text-lg font-extrabold text-slate-900 mt-1 tracking-tight">Nhập thông tin tra cứu</h2>
                 </div>
 
@@ -221,7 +213,7 @@ export default function HomePage() {
                     <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 transition-colors duration-200 group-focus-within:text-indigo-500" />
                     <input
                       type="text"
-                      placeholder="CCCD / Mã số thuế..."
+                      placeholder="CCCD (cá nhân)/số ĐKKD, mã số thuế (doanh nghiệp)"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-full h-11 pl-10 pr-4 rounded-xl bg-slate-50/80 border border-slate-200/80 placeholder:text-slate-400/90 text-sm font-medium text-slate-700 outline-none transition-all duration-200 hover:bg-slate-100/50 hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
@@ -259,60 +251,114 @@ export default function HomePage() {
         </div>
       )}
 
-      <div className="flex-1 w-full max-w-7xl mx-auto p-4 lg:p-6 mt-4">
+      <div ref={resultRef} className="flex-1 w-full max-w-7xl mx-auto p-4 lg:p-6 mt-4">
         {person ? (
-          <div ref={resultRef} className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch animate-in fade-in duration-300">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch animate-in fade-in duration-300">
 
-            <section className="bg-white rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.06)] flex flex-col justify-between overflow-hidden">
+            <section className="bg-white rounded-3xl border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.06)] flex flex-col justify-between overflow-hidden">
               <div>
-                <div className="bg-linear-to-r from-[#2e2c7d] to-[#4338ca] px-5 py-4 flex justify-between items-center">
-                  <h2 className="font-bold text-white text-sm tracking-wide uppercase">Thông tin cá nhân, tổ chức</h2>
-                  <span className="text-[10px] bg-white/20 text-white font-bold px-2 py-0.5 rounded-full">
-                    {person.typePerson === "TC" ? "Tổ chức" : person.typePerson === "NNB" ? "Người nội bộ" : "Người liên quan"}
+                <div className="bg-gradient-to-r from-[#1e1b4b] via-[#312e81] to-[#4f46e5] px-5 py-4 flex justify-between items-center">
+                  <h2 className="font-bold text-white text-sm tracking-wide uppercase">
+                    Thông tin cá nhân, tổ chức
+                  </h2>
+
+                  <span className="text-[10px] border border-white/20 bg-white/15 text-white font-bold px-2 py-0.5 rounded-full">
+                    {person.typePerson === "TC"
+                      ? "Tổ chức"
+                      : person.typePerson === "NNB"
+                        ? "Người nội bộ"
+                        : "Người liên quan"}
                   </span>
                 </div>
 
                 <div className="p-6 space-y-4">
                   <div>
-                    <label className="text-[11px] text-slate-400 block uppercase font-bold tracking-wider">Họ và tên:</label>
-                    <p className="font-bold text-slate-900 text-lg">{person.ho_ten}</p>
+                    <label className="text-[11px] text-slate-500 block uppercase font-bold tracking-wider">
+                      TÊN CÁ NHÂN/TỔ CHỨC:
+                    </label>
+
+                    <p className="font-bold text-slate-900 text-lg">
+                      {person.ho_ten}
+                    </p>
                   </div>
+
                   <div>
-                    <label className="text-[11px] text-slate-400 block uppercase font-bold tracking-wider">NSH (Số giấy tờ):</label>
-                    <p className="font-semibold text-slate-700 text-sm">{person.so_giay_nsh}</p>
+                    <label className="text-[11px] text-slate-500 block uppercase font-bold tracking-wider">
+                      SỐ GIẤY TỜ PHÁP LÝ:
+                    </label>
+
+                    <p className="font-semibold text-slate-700 text-sm">
+                      {person.so_giay_nsh}
+                    </p>
                   </div>
+
                   <div>
-                    <label className="text-[11px] text-slate-400 block uppercase font-bold tracking-wider mb-2">Mối quan hệ pháp lý:</label>
-                    <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 shadow-inner">
+                    <label className="text-[11px] text-slate-500 block uppercase font-bold tracking-wider mb-2">
+                      CHỨC VỤ/MỐI QUAN HỆ LIÊN QUAN:
+                    </label>
+
+                    <div className="bg-indigo-50/40 border border-indigo-100 rounded-2xl p-4 shadow-inner">
                       {renderRelationship()}
                     </div>
                   </div>
 
-                  {(person.ma_chung_khoan || person.tk_giao_dich) && (
-                    <div className="grid grid-cols-2 gap-3 pt-4 border-t border-slate-100">
-                      <div>
-                        <span className="text-[10px] text-slate-400 block uppercase font-bold">Mã CK</span>
-                        <span className="text-sm font-bold text-[#2e2c7d]">{person.ma_chung_khoan || "-"}</span>
+                  <div className="mt-5 rounded-xl border border-indigo-100 bg-gradient-to-r from-indigo-50 via-white to-indigo-50 p-4 shadow-sm">
+                    <div className="mb-2 flex items-center gap-2">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#3730a3] to-[#4f46e5] text-white">
+                        ✓
                       </div>
-                      <div>
-                        <span className="text-[10px] text-slate-400 block uppercase font-bold">Tài khoản GD</span>
-                        <span className="text-sm font-bold text-[#2e2c7d]">{person.tk_giao_dich || "-"}</span>
-                      </div>
+
+                      <label className="text-xs font-bold uppercase tracking-widest text-[#312e81]">
+                        KẾT LUẬN
+                      </label>
                     </div>
-                  )}
+
+                    <p className="text-base leading-7 text-slate-800">
+                      {person.typePerson == "NNB" ? (
+                        <>
+                          Cá nhân là{" "}
+                          <span className="font-bold text-[#3730a3]">
+                            người nội bộ
+                          </span>{" "}
+                          của{" "}
+                          <span className="font-bold text-slate-900">
+                            Công ty Cổ phần Đầu tư Hạ tầng giao thông Đèo Cả
+                          </span>.
+                        </>
+                      ) : (
+                        <>
+                          Cá nhân/Tổ chức là{" "}
+                          <span className="font-bold text-[#3730a3]">
+                            người có liên quan của người nội bộ
+                          </span>{" "}
+                          của{" "}
+                          <span className="font-bold text-slate-900">
+                            Công ty Cổ phần Đầu tư Hạ tầng giao thông Đèo Cả
+                          </span>.
+                        </>
+                      )}
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              <form onSubmit={handleSubmitSupport} className="border-t border-slate-100 bg-slate-50/70 p-5 space-y-3 rounded-b-3xl">
-                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Ý kiến / Lời nhắn để lại</h3>
+              <form
+                onSubmit={handleSubmitSupport}
+                className="border-t border-slate-200 bg-gradient-to-b from-slate-50 to-white p-5 space-y-3 rounded-b-3xl"
+              >
+                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  Ý KIẾN PHẢN HỒI:
+                </h3>
+
                 <textarea
                   rows={2}
                   placeholder="Ghi nội dung lời nhắn tại đây..."
                   value={feedback}
                   onChange={(e) => setFeedback(e.target.value)}
-                  className="w-full text-xs p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#2e2c7d] focus:border-transparent outline-none bg-white shadow-xs resize-none text-slate-800"
+                  className="w-full text-xs p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#4338ca] focus:border-transparent outline-none bg-white shadow-xs resize-none text-slate-800"
                   required
                 />
+
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -322,15 +368,17 @@ export default function HomePage() {
                       const value = e.target.value.replace(/\D/g, "");
                       if (value.length <= 11) setPhone(value);
                     }}
-                    className="flex-1 text-xs px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#2e2c7d] focus:border-transparent outline-none bg-white shadow-xs text-slate-800"
+                    className="flex-1 text-xs px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#4338ca] focus:border-transparent outline-none bg-white shadow-xs text-slate-800"
                     required
                   />
+
                   <button
                     type="submit"
                     disabled={sendingSupport}
-                    className="bg-linear-to-r from-[#2e2c7d] to-[#4338ca] text-white px-5 py-2 rounded-xl text-xs font-bold hover:opacity-95 transition-all duration-300 shadow-sm flex items-center gap-1.5 shrink-0 disabled:bg-slate-400"
+                    className="bg-gradient-to-r from-[#1e1b4b] via-[#312e81] to-[#4f46e5] text-white px-5 py-2 rounded-xl text-xs font-bold hover:opacity-95 transition-all duration-300 shadow-sm flex items-center gap-1.5 shrink-0 disabled:bg-slate-400"
                   >
-                    <Send size={12} /> {sendingSupport ? "..." : "GỬI"}
+                    <Send size={12} />
+                    {sendingSupport ? "..." : "GỬI"}
                   </button>
                 </div>
               </form>
@@ -410,13 +458,13 @@ export default function HomePage() {
 
           </div>
         ) : (
-          <div className="flex-1 flex items-center justify-center pt-4 pb-16 animate-in fade-in duration-500">
+          <div className="flex-1 flex items-center justify-center pb-16 animate-in fade-in duration-500">
             <div className="max-w-xl text-center">
               <div className="w-24 h-24 rounded-full bg-linear-to-br from-indigo-500 to-cyan-500 text-white flex items-center justify-center mx-auto shadow-xl">
                 <User size={42} />
               </div>
-              <h2 className="mt-8 text-3xl font-bold text-slate-800">
-                Tra cứu nghĩa vụ công bố thông tin
+              <h2 className="mx-auto mt-8 max-w-5xl text-center text-2xl font-bold leading-tight text-slate-800">
+                Thông tin Người nội bộ & Người có liên quan HHV
               </h2>
               <p className="mt-4 text-slate-500 leading-relaxed">
                 Nhập mã định danh cá nhân, hoặc mã số thuế để tra cứu nghĩa vụ công bố thông tin và các biểu mẫu liên quan.
