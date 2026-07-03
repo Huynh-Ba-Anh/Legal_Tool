@@ -118,7 +118,6 @@ export function HhvStock() {
         'ALL': { label: 'ALL', count: data.length, value: formatPercent(pctAll), positive: pctAll !== null ? pctAll >= 0 : true, values: data.map((item) => item.close) },
     };
 
-    const metrics = Object.values(metricsConfig);
     const activeMetric = metricsConfig[selectedRange] || metricsConfig['1M'];
     const mainSparklineData = activeMetric.values.slice().reverse();
 
@@ -161,22 +160,24 @@ export function HhvStock() {
     return (
         <>
             {/* Main Widget Card */}
-            <div className={`overflow-hidden rounded-xl border border-slate-200/80 p-4 shadow-xs transition-all duration-500 ${isPositive ? 'bg-linear-to-br from-white via-emerald-50/20 to-white' : 'bg-linear-to-br from-white via-rose-50/20 to-white'}`}>
-
+            <div className={`overflow-hidden rounded-xl border border-slate-200/80 p-4 pb-0.5 shadow-xs transition-all duration-500 ${isPositive ? 'bg-linear-to-br from-white via-emerald-50/20 to-white' : 'bg-linear-to-br from-white via-rose-50/20 to-white'}`}>
+                <div className="flex justify-center mb-4">
+                    <h2 className="text-lg font-bold tracking-tight text-slate-900">
+                        BẢNG GIÁ CỔ PHIẾU
+                    </h2>
+                </div>
                 {/* Header Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-7 gap-4 items-center">
+                <div className="grid grid-cols-1 md:grid-cols-7 gap-4">
                     {/* Left Side: Info & Price */}
                     <div className="space-y-2 md:col-span-2">
                         <div className="flex items-center gap-3">
-                            <div className="h-12 w-12 rounded-xl bg-white border border-slate-100 flex items-center justify-center p-1 shadow-2xs shrink-0">
+                            <div className="h-14 w-14 rounded-xl bg-white border border-slate-100 flex items-center justify-center p-1 shadow-2xs shrink-0">
                                 <img src="/Logo.png" alt="logo" className="h-full w-full object-contain" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
                             </div>
                             <div className="min-w-0">
                                 <div className="flex items-center gap-1.5">
-                                    <h1 className="text-base font-bold text-slate-900 tracking-tight">HHV</h1>
-                                    <span className="px-1.5 py-0.5 text-[10px] font-bold rounded bg-slate-100 text-slate-500 tracking-wide">HOSE</span>
+                                    <h1 className="text-base font-bold text-slate-900 tracking-tight">HHV (HSX)</h1>
                                 </div>
-                                <p className="text-[11px] font-medium text-slate-500 uppercase tracking-wider truncate">Hạ tầng Giao thông Đèo Cả</p>
                             </div>
                         </div>
 
@@ -189,7 +190,6 @@ export function HhvStock() {
                             </span>
                         </div>
 
-                        {/* Thẻ hiển thị thời gian đồng bộ từ DB */}
                         <div className="flex items-center select-none">
                             <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500/90 bg-slate-100/60 border border-slate-200/40 px-2 py-1 rounded-md">
                                 <span className={`h-2 w-2 rounded-full inline-block shrink-0 ${sessionActive ? 'bg-emerald-600 shadow-[0_0_6px_#10b981]' : 'bg-slate-400'}`} />
@@ -224,7 +224,6 @@ export function HhvStock() {
                                     </linearGradient>
                                 </defs>
 
-                                {/* Các đường kẻ ngang */}
                                 {yGridLines.map((line, idx) => (
                                     <g key={idx} className="opacity-40">
                                         <line x1="0" y1={line.y} x2={chartWidth} y2={line.y} stroke="#e2e8f0" strokeWidth="0.8" strokeDasharray={idx === 0 || idx === 4 ? '0' : '3,3'} />
@@ -275,29 +274,7 @@ export function HhvStock() {
 
             {/* Bottom Multi-Range Performance Quick-View */}
             <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5 py-2">
-                {metrics.map((metric) => {
-                    const miniSparkMin = metric.values.length > 0 ? Math.min(...metric.values) : 0;
-                    const miniSparkMax = metric.values.length > 0 ? Math.max(...metric.values) : 1;
-                    const miniSpark = buildSparklinePath(metric.values.slice().reverse(), 80, 16, miniSparkMin, miniSparkMax);
-                    const isActive = selectedRange === metric.label;
 
-                    return (
-                        <button key={metric.label} type="button" onClick={() => setSelectedRange(metric.label)} className={`relative overflow-hidden rounded-xl p-2 border text-left flex flex-col justify-between cursor-pointer group select-none transition-all duration-300 ${isActive ? 'bg-linear-to-br from-slate-900 via-slate-900 to-slate-800 border-slate-700 text-white scale-[1.05] shadow-[0_10px_30px_rgba(0,0,0,0.35)] ring-1 ring-white/10' : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-linear-to-br hover:from-slate-50 hover:to-white hover:shadow-md text-slate-700'}`}>
-                            <div className={`absolute inset-0 pointer-events-none transition-opacity duration-300 ${isActive ? 'opacity-100 bg-white/5' : 'opacity-0'}`} />
-
-                            <div className="relative flex items-center justify-between w-full text-[10px] font-semibold">
-                                <span className={isActive ? 'text-white/60' : 'text-slate-400'}>{metric.label}</span>
-                                <span className={`font-bold tracking-tight ${isActive ? 'text-white' : metric.positive ? 'text-emerald-600' : 'text-rose-600'}`}>{metric.value}</span>
-                            </div>
-
-                            <div className="relative mt-1.5 h-3.5 w-full overflow-hidden opacity-80 group-hover:opacity-100 transition-opacity">
-                                <svg viewBox="0 0 80 16" className="h-full w-full" preserveAspectRatio="none">
-                                    {miniSpark.line && <path d={miniSpark.line} fill="none" stroke={isActive ? '#ffffff' : metric.positive ? '#10b981' : '#ef4444'} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="transition-all duration-300" />}
-                                </svg>
-                            </div>
-                        </button>
-                    );
-                })}
             </div >
 
             {/* Error handling alert */}
