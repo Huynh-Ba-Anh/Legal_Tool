@@ -172,18 +172,20 @@ export default function HomePage() {
           className="relative min-h-130 h-screen flex items-center justify-center bg-cover bg-center"
           style={{ backgroundImage: "url('/image copy.png')" }}
         >
-          <div className="absolute inset-0 bg-linear-to-br from-[#0f172a]/75 via-[#1e1b4b]/55 to-[#312e81]/60" />
+          <div className="absolute inset-0 bg-linear-to-br from-[#3d455c]/75 via-[#2e2c58]/55 to-[#6e6b9c]/60" />
           <div className="absolute top-10 left-10 w-72 h-72 bg-cyan-500/15 rounded-full blur-3xl" />
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-500/15 rounded-full blur-3xl" />
 
-          <div className="relative z-10 max-w-5xl mx-auto text-center px-4 sm:px-6 pt-4 md:pt-6 pb-8 md:pb-12 -mt-4 sm:-mt-8 selection:bg-amber-500 selection:text-white">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white tracking-tight leading-snug sm:leading-tight uppercase drop-shadow-[0_4px_6px_rgba(0,0,0,0.4)]">
-              CÔNG TY CỔ PHẦN ĐẦU TƯ HẠ TẦNG GIAO THÔNG ĐÈO CẢ
+          <div className="relative z-10 max-w-6xl mx-auto text-center px-4 sm:px-6 pt-4 md:pt-6 pb-10">
+            <h1 className="mt-4 text-[4.2vw] sm:text-3xl md:text-4xl lg:text-5xl font-black uppercase leading-tight">
+              <span className="text-purple-700 whitespace-nowrap">
+                CỔNG TRA CỨU VÀ HỖ TRỢ CÔNG BỐ THÔNG TIN
+              </span>
+              <br />
+              <span className="text-white text-xl sm:text-2xl md:text-3xl lg:text-4xl font-semibold">
+                Dành cho người nội bộ và người có liên quan của người nội bộ
+              </span>
             </h1>
-
-            <p className="mt-6 max-w-4xl mx-auto text-[11px] sm:text-xs md:text-sm font-semibold uppercase tracking-wide leading-6 text-white/95 drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]">
-              CỔNG TRA CỨU VÀ HỖ TRỢ CÔNG BỐ THÔNG TIN CHO NGƯỜI NỘI BỘ VÀ NGƯỜI CÓ LIÊN QUAN CỦA NGƯỜI NỘI BỘ CÔNG TY CỔ PHẦN ĐẦU TƯ HẠ TẦNG GIAO THÔNG ĐÈO CẢ
-            </p>
           </div>
 
           <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1">
@@ -213,7 +215,7 @@ export default function HomePage() {
                     <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 transition-colors duration-200 group-focus-within:text-indigo-500" />
                     <input
                       type="text"
-                      placeholder="CCCD (cá nhân)/số ĐKKD, mã số thuế (doanh nghiệp)"
+                      placeholder="CCCD/ Mã số thuế"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="w-full h-11 pl-10 pr-4 rounded-xl bg-slate-50/80 border border-slate-200/80 placeholder:text-slate-400/90 text-sm font-medium text-slate-700 outline-none transition-all duration-200 hover:bg-slate-100/50 hover:border-slate-300 focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
@@ -257,7 +259,7 @@ export default function HomePage() {
 
             <section className="bg-white rounded-3xl border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.06)] flex flex-col justify-between overflow-hidden">
               <div>
-                <div className="bg-gradient-to-r from-[#1e1b4b] via-[#312e81] to-[#4f46e5] px-5 py-4 flex justify-between items-center">
+                <div className="bg-linear-to-r from-[#1e1b4b] via-[#312e81] to-[#4f46e5] px-5 py-4 flex justify-between items-center">
                   <h2 className="font-bold text-white text-sm tracking-wide uppercase">
                     Thông tin cá nhân, tổ chức
                   </h2>
@@ -302,9 +304,9 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  <div className="mt-5 rounded-xl border border-indigo-100 bg-gradient-to-r from-indigo-50 via-white to-indigo-50 p-4 shadow-sm">
+                  <div className="mt-5 rounded-xl border border-indigo-100 bg-linear-to-r from-indigo-50 via-white to-indigo-50 p-4 shadow-sm">
                     <div className="mb-2 flex items-center gap-2">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-[#3730a3] to-[#4f46e5] text-white">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br from-[#3730a3] to-[#4f46e5] text-white">
                         ✓
                       </div>
 
@@ -344,7 +346,7 @@ export default function HomePage() {
 
               <form
                 onSubmit={handleSubmitSupport}
-                className="border-t border-slate-200 bg-gradient-to-b from-slate-50 to-white p-5 space-y-3 rounded-b-3xl"
+                className="border-t border-slate-200 bg-linear-to-b from-slate-50 to-white p-5 space-y-3 rounded-b-3xl"
               >
                 <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
                   Ý KIẾN PHẢN HỒI:
