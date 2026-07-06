@@ -7,8 +7,7 @@ export default function Header() {
     return (
         <header className="sticky top-0 z-50 shadow-sm">
             <div className="bg-[#2e2c7d] h-12 text-white">
-
-                <div className="w-full h-full flex items-center">
+                <div className="w-full h-full flex items-center justify-between">
 
                     <div className="flex items-center px-6">
                         <button
@@ -25,16 +24,21 @@ export default function Header() {
 
                     <div className="w-px h-7 bg-white/40" />
 
-                    <div className="flex-1 px-6 overflow-hidden">
-                        <div className="whitespace-nowrap animate-marquee text-lg font-medium text-center">
-                            KHÁT VỌNG - KIÊN ĐỊNH - TRI ÂN
+                    <div className="w-125 h-full relative flex items-center overflow-hidden mx-auto">
+
+                        <div className="absolute whitespace-nowrap animate-marquee1 text-lg font-medium uppercase will-change-transform pr-36">
+                            Công ty Cổ phần Đầu tư Hạ tầng Giao thông Đèo Cả
                         </div>
+
+                        <div className="absolute whitespace-nowrap animate-marquee2 text-lg font-medium uppercase will-change-transform pr-36">
+                            Công ty Cổ phần Đầu tư Hạ tầng Giao thông Đèo Cả
+                        </div>
+
                     </div>
 
                     <div className="w-px h-7 bg-white/40" />
 
                     <div className="px-6 flex gap-2">
-
                         <button
                             onClick={() => navigate("/dashboard")}
                             className="
