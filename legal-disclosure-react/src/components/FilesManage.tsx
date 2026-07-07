@@ -16,8 +16,7 @@ export default function FilesManage({ onFilesChange }: Props) {
     const [filter, setFilter] = useState("ALL");
     const [isCreate, setIsCreate] = useState(false);
     const [editDraft, setEditDraft] = useState<IFileDraft | null>(null);
-    const [uploadFile, setUploadFile] = useState<File | null>(null);
-    const [editUploadFile, setEditUploadFile] = useState<File | null>(null);
+    const [uploadFiles, setUploadFiles] = useState<File[]>([]);
 
     const [newFile, setNewFile] = useState<IFileDraft>({
         title: "",
@@ -75,9 +74,10 @@ export default function FilesManage({ onFilesChange }: Props) {
             formData.append("content", data.content);
             formData.append("typePerson", data.typePerson);
 
-            if (editUploadFile) {
-                formData.append("file", editUploadFile);
-            }
+            // Add multiple files
+            uploadFiles.forEach((file) => {
+                formData.append("file", file);
+            });
 
             const updatedFile = await fileService.update(
                 selectedFile._id,
@@ -94,7 +94,7 @@ export default function FilesManage({ onFilesChange }: Props) {
 
             setSelectedFile(null);
             setEditDraft(null);
-            setEditUploadFile(null);
+            setUploadFiles([]);
 
         } catch (err) {
             console.error("Lỗi cập nhật:", err);
@@ -115,9 +115,10 @@ export default function FilesManage({ onFilesChange }: Props) {
             formData.append("content", newFile.content);
             formData.append("typePerson", newFile.typePerson);
 
-            if (uploadFile) {
-                formData.append("file", uploadFile);
-            }
+            // Add multiple files
+            uploadFiles.forEach((file) => {
+                formData.append("file", file);
+            });
 
             const createdItem = await fileService.create(formData);
 
@@ -132,7 +133,7 @@ export default function FilesManage({ onFilesChange }: Props) {
                 typePerson: "NNB",
             });
 
-            setUploadFile(null);
+            setUploadFiles([]);
             setIsCreate(false);
 
         } catch (err) {
@@ -219,6 +220,9 @@ export default function FilesManage({ onFilesChange }: Props) {
                                 Áp dụng cho nhóm
                             </th>
                             <th className="p-4 text-center font-semibold text-slate-600 whitespace-nowrap">
+                                File đính kèm
+                            </th>
+                            <th className="p-4 text-center font-semibold text-slate-600 whitespace-nowrap">
                                 Thao tác
                             </th>
                         </tr>
@@ -228,7 +232,7 @@ export default function FilesManage({ onFilesChange }: Props) {
                         {filteredFiles.length === 0 ? (
                             <tr>
                                 <td
-                                    colSpan={3}
+                                    colSpan={4}
                                     className="py-12 text-center"
                                 >
                                     <div className="flex flex-col items-center gap-3 text-slate-400">
@@ -266,6 +270,12 @@ export default function FilesManage({ onFilesChange }: Props) {
                                         </span>
                                     </td>
 
+                                    <td className="p-4 text-center">
+                                        <span className="inline-flex items-center gap-1 bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full text-xs font-semibold">
+                                            📎 {item.files?.length || 0}
+                                        </span>
+                                    </td>
+
                                     <td className="p-4 whitespace-nowrap">
                                         <div className="flex justify-center gap-2">
                                             <button
@@ -300,8 +310,9 @@ export default function FilesManage({ onFilesChange }: Props) {
                     setSelectedFile={setSelectedFile}
                     handleUpdate={handleUpdate}
                     getTypeText={getTypeText}
-                    uploadFile={editUploadFile}
-                    setUploadFile={setEditUploadFile}
+                    uploadFiles={uploadFiles}
+                    setUploadFiles={setUploadFiles}
+                    onFileDeleted={loadFiles}
                 />
             )}
 
@@ -309,8 +320,8 @@ export default function FilesManage({ onFilesChange }: Props) {
                 <Create
                     newFile={newFile}
                     setNewFile={setNewFile}
-                    uploadFile={uploadFile}
-                    setUploadFile={setUploadFile}
+                    uploadFiles={uploadFiles}
+                    setUploadFiles={setUploadFiles}
                     setIsCreate={setIsCreate}
                     handleCreate={handleCreate}
                 />

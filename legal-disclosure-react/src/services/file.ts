@@ -42,6 +42,34 @@ export const fileService = {
         });
 
         return res.data;
+    },
+
+    deleteFile: async (id: string, fileIndex: number): Promise<void> => {
+        await client.delete(`filesInform/${id}/file/${fileIndex}`);
+    },
+
+    updateFiles: async (
+        id: string,
+        files: File[],
+        fileIndices: number[]
+    ): Promise<IFile> => {
+        const formData = new FormData();
+        files.forEach((file) => {
+            formData.append("file", file);
+        });
+        formData.append("fileIndices", JSON.stringify(fileIndices));
+
+        const response = await client.patch(
+            `filesInform/${id}/files`,
+            formData,
+            {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            }
+        );
+
+        return response.data;
     }
 
 };

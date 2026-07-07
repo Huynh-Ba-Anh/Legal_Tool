@@ -1,6 +1,7 @@
 import json
 import sys
 from contextlib import redirect_stdout, redirect_stderr
+from datetime import date
 from io import StringIO
 
 from vnstock.api.quote import Quote
@@ -12,7 +13,7 @@ with redirect_stdout(buffer), redirect_stderr(buffer):
     df = quote.history(
         symbol='HHV',
         start='2025-01-01',
-        end='2026-06-29',
+        end=date.today().strftime('%Y-%m-%d'),
         interval='D',
     )
 

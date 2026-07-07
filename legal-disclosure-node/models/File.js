@@ -15,19 +15,28 @@ const fileSchema = new mongoose.Schema(
         typePerson: {
             type: String,
             required: true,
-            enum: ["NNB", "NLQ"]
+            enum: ["NNB", "NLQ"],
         },
 
-        file: {
-            data: Buffer,
-            contentType: String,
-            originalName: String,
-        },
-
+        files: [
+            {
+                data: {
+                    type: Buffer,
+                    required: true,
+                },
+                contentType: {
+                    type: String,
+                    required: true,
+                },
+                originalName: {
+                    type: String,
+                    required: true,
+                },
+            },
+        ],
     },
     {
         timestamps: true,
-    }
-);
+    });
 
 module.exports = mongoose.model("File", fileSchema);
