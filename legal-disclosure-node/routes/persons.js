@@ -20,7 +20,7 @@ router.get("/search", async (req, res) => {
 
     let typePerson = null;
 
-    if (person.loai_giay_nsh !== "CCCD" && person.loai_giay_nsh !== "CMND") {
+    if (person.loai_giay_nsh !== "CCCD" && person.loai_giay_nsh !== "CMND" && person.loai_giay_nsh !== "THẺ CĂN CƯỚC") {
       typePerson = "TC";
     } else if (person.chuc_vu === "Không") {
       typePerson = "NLQ";
