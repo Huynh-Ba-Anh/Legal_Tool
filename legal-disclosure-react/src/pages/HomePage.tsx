@@ -29,6 +29,9 @@ export default function HomePage() {
   const [feedback, setFeedback] = useState("");
   const [phone, setPhone] = useState("");
   const [sendingSupport, setSendingSupport] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const BACKGROUND_IMAGES = ["/background.png", "/background_1.png", "/background_2.png"];
 
   const searchSectionRef = useRef<HTMLDivElement | null>(null);
   const resultRef = useRef<HTMLDivElement | null>(null);
@@ -38,6 +41,14 @@ export default function HomePage() {
       resultRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [person]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % BACKGROUND_IMAGES.length);
+    }, 5000); // Change image every 5 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   const scrollToSearch = () => {
     searchSectionRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -168,10 +179,22 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-linear-to-b from-slate-50 via-slate-100 to-slate-200 flex flex-col font-sans">
       <div className="relative">
-        <div
-          className="relative min-h-130 h-screen flex items-center justify-center bg-cover bg-center"
-          style={{ backgroundImage: "url('/image copy.png')" }}
-        >
+        <div className="relative min-h-130 h-screen flex items-center justify-center overflow-hidden">
+          <div
+            className="absolute inset-0 bg-cover bg-center transition-all duration-1000 ease-in-out"
+            style={{
+              backgroundImage: `url('${BACKGROUND_IMAGES[currentImageIndex]}')`,
+              transform: "translateX(0%)",
+            }}
+          />
+
+          <div
+            className="absolute inset-0 bg-cover bg-center transition-all duration-1000 ease-in-out"
+            style={{
+              backgroundImage: `url('${BACKGROUND_IMAGES[(currentImageIndex + 1) % BACKGROUND_IMAGES.length]}')`,
+              transform: "translateX(100%)",
+            }}
+          />
           <div className="absolute inset-0 bg-linear-to-br from-[#3d455c]/75 via-[#2e2c58]/55 to-[#6e6b9c]/60" />
           <div className="absolute top-10 left-10 w-72 h-72 bg-cyan-500/15 rounded-full blur-3xl" />
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-indigo-500/15 rounded-full blur-3xl" />
@@ -257,14 +280,52 @@ export default function HomePage() {
         {person ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch animate-in fade-in duration-300">
 
-            <section className="bg-white rounded-3xl border border-slate-200 shadow-[0_8px_30px_rgb(0,0,0,0.06)] flex flex-col justify-between overflow-hidden">
+            <section className="bg-slate-50 rounded-3xl border border-slate-200/80 shadow-[0_15px_40px_rgba(15,23,42,0.08)] flex flex-col justify-between overflow-hidden max-w-md w-full">
               <div>
-                <div className="bg-linear-to-r from-[#1e1b4b] via-[#312e81] to-[#4f46e5] px-5 py-4 flex justify-between items-center">
-                  <h2 className="font-bold text-white text-sm tracking-wide uppercase">
-                    Thông tin cá nhân, tổ chức
-                  </h2>
+                <div className="bg-gradient-to-br from-[#1e1b4b] via-[#252362] to-[#4f46e5] px-6 py-5 shadow-md relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -mr-5 -mt-5" />
 
-                  <span className="text-[10px] border border-white/20 bg-white/15 text-white font-bold px-2 py-0.5 rounded-full">
+                  <div className="mb-2.5 flex items-center gap-2.5">
+                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white font-bold text-sm shadow-[0_2px_10px_rgba(16,185,129,0.4)] animate-pulse">
+                      ✓
+                    </div>
+                    <h2 className="font-bold text-white text-sm tracking-widest uppercase">
+                      Kết quả tra cứu
+                    </h2>
+                  </div>
+
+                  <p className="text-sm leading-7 text-indigo-100/90 font-medium">
+                    {person.typePerson === "NNB" ? (
+                      <>
+                        Cá nhân là{" "}
+                        <span className="font-extrabold text-white px-0.5">
+                          người nội bộ
+                        </span>{" "}
+                        của{" "}
+                        <span className="font-bold text-white bg-white/10 px-1.5 py-0.5 rounded-md">
+                          Công ty Cổ phần Đầu tư Hạ tầng giao thông Đèo Cả
+                        </span>.
+                      </>
+                    ) : (
+                      <>
+                        Cá nhân/Tổ chức là{" "}
+                        <span className="font-extrabold text-white px-0.5">
+                          người có liên quan của người nội bộ
+                        </span>{" "}
+                        của{" "}
+                        <span className="font-bold text-white bg-white/10 px-1.5 py-0.5 rounded-md">
+                          Công ty Cổ phần Đầu tư Hạ tầng giao thông Đèo Cả
+                        </span>.
+                      </>
+                    )}
+                  </p>
+                </div>
+
+                <div className="border-b border-slate-200 bg-linear-to-r from-slate-100 via-slate-50 to-slate-100 px-6 py-3.5 flex justify-between items-center shadow-xs">
+                  <h3 className="font-extrabold text-slate-700 text-[11px] tracking-widest uppercase">
+                    Thông tin cá nhân, tổ chức
+                  </h3>
+                  <span className="text-[10px] font-extrabold px-3 py-1 rounded-full shadow-xs border border-indigo-100 bg-white text-indigo-700 tracking-wider uppercase">
                     {person.typePerson === "TC"
                       ? "Tổ chức"
                       : person.typePerson === "NNB"
@@ -273,83 +334,51 @@ export default function HomePage() {
                   </span>
                 </div>
 
-                <div className="p-6 space-y-4">
-                  <div>
-                    <label className="text-[11px] text-slate-500 block uppercase font-bold tracking-wider">
-                      TÊN CÁ NHÂN/TỔ CHỨC:
-                    </label>
-
-                    <p className="font-bold text-slate-900 text-lg">
-                      {person.ho_ten}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] text-slate-500 block uppercase font-bold tracking-wider">
-                      SỐ GIẤY TỜ PHÁP LÝ:
-                    </label>
-
-                    <p className="font-semibold text-slate-700 text-sm">
-                      {person.so_giay_nsh}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] text-slate-500 block uppercase font-bold tracking-wider mb-2">
-                      CHỨC VỤ/MỐI QUAN HỆ LIÊN QUAN:
-                    </label>
-
-                    <div className="bg-indigo-50/40 border border-indigo-100 rounded-2xl p-4 shadow-inner">
-                      {renderRelationship()}
-                    </div>
-                  </div>
-
-                  <div className="mt-5 rounded-xl border border-indigo-100 bg-linear-to-r from-indigo-50 via-white to-indigo-50 p-4 shadow-sm">
-                    <div className="mb-2 flex items-center gap-2">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br from-[#3730a3] to-[#4f46e5] text-white">
-                        ✓
-                      </div>
-
-                      <label className="text-xs font-bold uppercase tracking-widest text-[#312e81]">
-                        KẾT LUẬN
+                <div className="p-6 space-y-5 bg-white">
+                  <div className="flex items-start gap-3 group">
+                    <span className="text-indigo-500 font-bold text-lg leading-none select-none transition-transform group-hover:scale-125">•</span>
+                    <div className="flex-1">
+                      <label className="text-[10px] text-slate-400 block uppercase font-extrabold tracking-widest">
+                        Tên cá nhân/Tổ chức
                       </label>
+                      <p className="font-extrabold text-slate-900 text-lg mt-0.5 tracking-wide">
+                        {person.ho_ten}
+                      </p>
                     </div>
+                  </div>
 
-                    <p className="text-base leading-7 text-slate-800">
-                      {person.typePerson == "NNB" ? (
-                        <>
-                          Cá nhân là{" "}
-                          <span className="font-bold text-[#3730a3]">
-                            người nội bộ
-                          </span>{" "}
-                          của{" "}
-                          <span className="font-bold text-slate-900">
-                            Công ty Cổ phần Đầu tư Hạ tầng giao thông Đèo Cả
-                          </span>.
-                        </>
-                      ) : (
-                        <>
-                          Cá nhân/Tổ chức là{" "}
-                          <span className="font-bold text-[#3730a3]">
-                            người có liên quan của người nội bộ
-                          </span>{" "}
-                          của{" "}
-                          <span className="font-bold text-slate-900">
-                            Công ty Cổ phần Đầu tư Hạ tầng giao thông Đèo Cả
-                          </span>.
-                        </>
-                      )}
-                    </p>
+                  <div className="flex items-start gap-3 group">
+                    <span className="text-indigo-500 font-bold text-lg leading-none select-none transition-transform group-hover:scale-125">•</span>
+                    <div className="flex-1">
+                      <label className="text-[10px] text-slate-400 block uppercase font-extrabold tracking-widest">
+                        Số giấy tờ pháp lý
+                      </label>
+                      <p className="font-bold text-slate-700 text-sm mt-1 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100 inline-block font-mono tracking-wider">
+                        {person.so_giay_nsh}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3 group">
+                    <span className="text-indigo-500 font-bold text-lg leading-none select-none transition-transform group-hover:scale-125">•</span>
+                    <div className="flex-1">
+                      <label className="text-[10px] text-slate-400 block uppercase font-extrabold tracking-widest mb-2">
+                        Chức vụ/Mối quan hệ liên quan
+                      </label>
+                      <div className="bg-gradient-to-br from-indigo-50/50 via-white to-slate-50 border border-indigo-100/70 rounded-2xl p-4 shadow-[inset_0_2px_4px_rgba(0,0,0,0.02)]">
+                        {renderRelationship()}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
 
               <form
                 onSubmit={handleSubmitSupport}
-                className="border-t border-slate-200 bg-linear-to-b from-slate-50 to-white p-5 space-y-3 rounded-b-3xl"
+                className="border-t border-slate-200 bg-gradient-to-b from-slate-50 via-white to-white p-6 space-y-4 rounded-b-3xl shadow-2xl"
               >
-                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                  Ý KIẾN PHẢN HỒI:
+                <h3 className="text-[11px] font-extrabold text-slate-700 uppercase tracking-widest">
+                  Ý kiến phản hồi
                 </h3>
 
                 <textarea
@@ -357,29 +386,29 @@ export default function HomePage() {
                   placeholder="Ghi nội dung lời nhắn tại đây..."
                   value={feedback}
                   onChange={(e) => setFeedback(e.target.value)}
-                  className="w-full text-xs p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#4338ca] focus:border-transparent outline-none bg-white shadow-xs resize-none text-slate-800"
+                  className="w-full text-xs p-3.5 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-[#4f46e5]/20 focus:border-[#4f46e5] outline-none bg-white shadow-xs resize-none text-slate-800 placeholder-slate-400 transition-all duration-200"
                   required
                 />
 
-                <div className="flex gap-2">
+                <div className="flex gap-2.5">
                   <input
                     type="text"
-                    placeholder="Số điện thoại..."
+                    placeholder="Số điện thoại cá nhân..."
                     value={phone}
                     onChange={(e) => {
                       const value = e.target.value.replace(/\D/g, "");
                       if (value.length <= 11) setPhone(value);
                     }}
-                    className="flex-1 text-xs px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#4338ca] focus:border-transparent outline-none bg-white shadow-xs text-slate-800"
+                    className="flex-1 text-xs px-4 py-3 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-[#4f46e5]/20 focus:border-[#4f46e5] outline-none bg-white shadow-xs text-slate-800 placeholder-slate-400 font-mono tracking-wider transition-all duration-200"
                     required
                   />
 
                   <button
                     type="submit"
                     disabled={sendingSupport}
-                    className="bg-gradient-to-r from-[#1e1b4b] via-[#312e81] to-[#4f46e5] text-white px-5 py-2 rounded-xl text-xs font-bold hover:opacity-95 transition-all duration-300 shadow-sm flex items-center gap-1.5 shrink-0 disabled:bg-slate-400"
+                    className="bg-gradient-to-r from-[#1e1b4b] via-[#312e81] to-[#4f46e5] text-white px-6 py-3 rounded-2xl text-xs font-extrabold tracking-wider hover:opacity-95 active:scale-98 transition-all duration-200 shadow-[0_4px_12px_rgba(49,46,129,0.2)] flex items-center gap-2 shrink-0 disabled:from-slate-400 disabled:to-slate-500 disabled:shadow-none"
                   >
-                    <Send size={12} />
+                    <Send size={12} className={sendingSupport ? "animate-pulse" : ""} />
                     {sendingSupport ? "..." : "GỬI"}
                   </button>
                 </div>
@@ -430,23 +459,30 @@ export default function HomePage() {
                       </div>
                     </div>
 
-                    {selectedFile.file && (
+                    {selectedFile.files && selectedFile.files.length > 0 && (
                       <div className="pt-3 border-t border-slate-100 mt-4 shrink-0">
-                        <div className="text-[10px] font-bold text-slate-400 mb-1.5 uppercase tracking-wider">Hồ sơ đính kèm:</div>
-                        <a
-                          href={`${API_URL}/filesInform/${selectedFile._id}/preview`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="w-full flex items-center justify-between rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 px-4 py-2.5 text-xs font-medium text-slate-800 transition-all duration-200 shadow-xs"
-                        >
-                          <div className="flex items-center gap-2.5 truncate">
-                            <FileText size={16} className="text-red-500 shrink-0" />
-                            <span className="font-bold truncate text-slate-700">{selectedFile.file.originalName}</span>
-                          </div>
-                          <div className="flex items-center gap-1 text-indigo-700 font-extrabold shrink-0 ml-2">
-                            <Download size={13} /> Tải về
-                          </div>
-                        </a>
+                        <div className="text-[10px] font-bold text-slate-400 mb-2.5 uppercase tracking-wider">
+                          Hồ sơ đính kèm ({selectedFile.files.length}):
+                        </div>
+                        <div className="space-y-2">
+                          {selectedFile.files.map((file: any, index: number) => (
+                            <a
+                              key={index}
+                              href={`${API_URL}/filesInform/${selectedFile._id}/preview?fileIndex=${index}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="w-full flex items-center justify-between rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 px-4 py-2.5 text-xs font-medium text-slate-800 transition-all duration-200 shadow-xs"
+                            >
+                              <div className="flex items-center gap-2.5 truncate flex-1">
+                                <FileText size={16} className="text-red-500 shrink-0" />
+                                <span className="font-bold truncate text-slate-700">{file.originalName}</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-indigo-700 font-extrabold shrink-0 ml-2">
+                                <Download size={13} /> Tải về
+                              </div>
+                            </a>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </>

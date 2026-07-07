@@ -4,11 +4,11 @@ export interface IFile {
     title: string;
     content: string;
 
-    file: {
+    files: Array<{
         data: any;
         contentType: string;
         originalName: string;
-    } | null;
+    }> | null;
 
     typePerson: string;
 }
