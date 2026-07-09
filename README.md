@@ -32,4 +32,4 @@ Vì danh sách Người nội bộ và Người có liên quan biến động li
 
 *   **Frontend:** HTML5, CSS3, JavaScript (hoặc React/Vue để xử lý các Tab-Option mượt mà).
 *   **Backend:** Node.js (Express) để xử lý logic tra cứu bảo mật.
-*   **Database:** JSON Local File (cho dự án nhỏ gọn) hoặc MongoDB/PostgreSQL.
+*   **Database:** MongoDB.
