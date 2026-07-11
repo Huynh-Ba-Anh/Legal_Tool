@@ -24,7 +24,7 @@ export default function Header() {
 
                     <div className="w-px h-7 bg-white/40" />
 
-                    <div className="w-125 h-full relative flex items-center overflow-hidden mx-auto">
+                    <div className="w-175 h-full relative flex items-center overflow-hidden mx-auto">
 
                         <div className="absolute whitespace-nowrap animate-marquee1 text-lg font-medium uppercase will-change-transform pr-36">
                             Công ty Cổ phần Đầu tư Hạ tầng Giao thông Đèo Cả

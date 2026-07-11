@@ -201,7 +201,18 @@ export default function HomePage() {
 
           <div className="relative z-10 max-w-6xl mx-auto text-center px-4 sm:px-6 pt-4 md:pt-6 pb-10">
             <h1 className="mt-4 text-[4.2vw] sm:text-3xl md:text-4xl lg:text-5xl font-black uppercase leading-tight">
-              <span className="text-purple-700 whitespace-nowrap">
+              <span
+                className="text-purple-600 whitespace-nowrap"
+                style={{
+                  textShadow: `
+      1px 1px 0 #fff,
+      -1px 1px 0 #fff,
+      1px -1px 0 #fff,
+      -1px -1px 0 #fff,
+      0 4px 10px rgba(0,0,0,.45)
+    `,
+                }}
+              >
                 CỔNG TRA CỨU VÀ HỖ TRỢ CÔNG BỐ THÔNG TIN
               </span>
               <br />
