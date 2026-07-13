@@ -157,9 +157,13 @@ router.get("/:id/preview", async (req, res) => {
 
         const selectedFile = file.files[fileIndex];
 
+        res.setHeader("Content-Type", selectedFile.contentType);
+
         res.setHeader(
-            "Content-Type",
-            selectedFile.contentType
+            "Content-Disposition",
+            `attachment; filename*=UTF-8''${encodeURIComponent(
+                selectedFile.originalName
+            )}`
         );
 
         res.send(selectedFile.data);
@@ -232,7 +236,7 @@ router.patch("/:id/files", protectedRoute, upload.array("file", 2), async (req, 
         }
 
         // Parse indices từ JSON string
-        let indices = [0]; // Mặc định index 0 nếu không có
+        let indices = [0];
         try {
             if (fileIndices) {
                 indices = JSON.parse(fileIndices);
@@ -254,7 +258,6 @@ router.patch("/:id/files", protectedRoute, upload.array("file", 2), async (req, 
             });
         }
 
-        // Kiểm tra indices hợp lệ
         for (let idx of indices) {
             if (idx < 0 || idx >= file.files.length) {
                 return res.status(400).json({
@@ -263,7 +266,6 @@ router.patch("/:id/files", protectedRoute, upload.array("file", 2), async (req, 
             }
         }
 
-        // Cập nhật từng file theo index
         req.files.forEach((newFile, i) => {
             const fileIndex = indices[i];
             file.files[fileIndex] = {
